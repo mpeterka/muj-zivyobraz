@@ -74,6 +74,27 @@ scheduler.add_job(
 )
 ```
 
+## Ruční spuštění funkcí (Unix signály)
+
+Všechny funkce lze vyvolat zvenku pomocí Unix signálu:
+
+```bash
+# Spusť všechny funkce
+kill -SIGUSR1 <pid>
+
+# Graceful shutdown
+kill -SIGTERM <pid>
+```
+
+Nebo z hostitele pokud běží lokálně:
+```bash
+kill -SIGUSR1 $(pgrep -f "python main.py")
+```
+
+**Signály:**
+- `SIGUSR1` - Spustit **všechny** naplánované funkce
+- `SIGTERM` / `SIGINT` - Graceful shutdown
+
 ## Environment proměnné
 
 - `IMPORT_KEY` - Klíč pro API zivyobraz.eu (povinné)
@@ -84,4 +105,12 @@ Aplikace loguje všechny požadavky a chyby. Běží-li v Docker Compose, logy n
 
 ```bash
 docker-compose logs -f
+```
+
+Při spuštění zobrazí své PID:
+```
+2026-03-16 10:15:30 - INFO - Starting application...
+2026-03-16 10:15:30 - INFO - PID: 42
+2026-03-16 10:15:30 - INFO - Signal handlers registered:
+2026-03-16 10:15:30 - INFO -   SIGUSR1 - Run all jobs
 ```

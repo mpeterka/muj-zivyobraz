@@ -1,9 +1,9 @@
 import os
-import time
+import signal
+import sys
 import requests
 import logging
-from datetime import datetime
-from apscheduler.schedulers.blocking import BlockingScheduler
+from apscheduler.schedulers.background import BackgroundScheduler
 from functions.popelnice import get_popelnice_value
 
 # Logging setup
@@ -19,6 +19,9 @@ IMPORT_KEY = os.getenv("IMPORT_KEY")
 if not IMPORT_KEY:
     logger.error("IMPORT_KEY environment variable not set")
     exit(1)
+
+# Global scheduler reference for signal handlers
+scheduler = None
 
 
 def call_function(function_name, value):
@@ -43,16 +46,37 @@ def job_popelnice():
     call_function("popelnice", value)
 
 
-def job_heartbeat():
-    """Job to keep the application responsive"""
-    logger.info("Heartbeat")
+def signal_handler_run_all(signum, frame):
+    """SIGUSR1: Run all jobs immediately"""
+    logger.info("⚡ Signal SIGUSR1 received - running all jobs")
+    job_popelnice()
+
+
+def signal_handler_shutdown(signum, frame):
+    """SIGTERM/SIGINT: Graceful shutdown"""
+    logger.info("🛑 Shutdown signal received...")
+    if scheduler:
+        scheduler.shutdown()
+    sys.exit(0)
 
 
 def main():
+    global scheduler
+
     logger.info("Starting application...")
     logger.info(f"Base URL: {BASE_URL}")
+    logger.info(f"PID: {os.getpid()}")
 
-    scheduler = BlockingScheduler()
+    # Setup signal handlers
+    signal.signal(signal.SIGUSR1, signal_handler_run_all)
+    signal.signal(signal.SIGTERM, signal_handler_shutdown)
+    signal.signal(signal.SIGINT, signal_handler_shutdown)
+
+    logger.info("Signal handlers registered:")
+    logger.info("  SIGUSR1 - Run all jobs")
+    logger.info("  SIGTERM/SIGINT - Graceful shutdown")
+
+    scheduler = BackgroundScheduler()
 
     # Schedule popelnice job every hour
     scheduler.add_job(
@@ -69,12 +93,10 @@ def main():
     job_popelnice()
 
     logger.info("Scheduler started. Jobs will run every hour.")
+    scheduler.start()
 
-    try:
-        scheduler.start()
-    except KeyboardInterrupt:
-        logger.info("Shutting down...")
-        scheduler.shutdown()
+    # Keep the application running until signal is received
+    signal.pause()
 
 
 if __name__ == "__main__":

@@ -1,4 +1,4 @@
-# Žijící Obraz - Aplikace
+# zivyobraz.eu udělátka
 
 Aplikace běží v cyklu a jednou za hodinu odesílá data do `zivyobraz.eu` API.
 

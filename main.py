@@ -5,6 +5,7 @@ import requests
 import logging
 from apscheduler.schedulers.background import BackgroundScheduler
 from functions.popelnice import get_popelnice_value
+from functions.klementinum import get_klementinum_values
 
 # Logging setup
 logging.basicConfig(
@@ -25,7 +26,7 @@ scheduler = None
 
 
 def call_function(function_name, value):
-    """Generic function to call the API with a specific function"""
+    """Generic function to call the API with a single value"""
     try:
         params = {
             "import_key": IMPORT_KEY,
@@ -40,16 +41,38 @@ def call_function(function_name, value):
         return False
 
 
+def call_function_multiple(values_dict):
+    """Call the API with multiple key-value pairs"""
+    try:
+        params = {"import_key": IMPORT_KEY}
+        params.update(values_dict)
+        response = requests.get(BASE_URL, params=params, timeout=10)
+        response.raise_for_status()
+        logger.info(f"✓ Multiple values sent | Status: {response.status_code}")
+        return True
+    except requests.exceptions.RequestException as e:
+        logger.error(f"✗ Multiple values failed: {e}")
+        return False
+
+
 def job_popelnice():
     """Job for popelnice function"""
     value = get_popelnice_value()
     call_function("popelnice", value)
 
 
+def job_klementinum():
+    """Job for klementinum function"""
+    values = get_klementinum_values()
+    if values:
+        call_function_multiple(values)
+
+
 def signal_handler_run_all(signum, frame):
     """SIGUSR1: Run all jobs immediately"""
     logger.info("⚡ Signal SIGUSR1 received - running all jobs")
     job_popelnice()
+    job_klementinum()
 
 
 def signal_handler_shutdown(signum, frame):
@@ -88,9 +111,20 @@ def main():
         misfire_grace_time=15
     )
 
-    # Run first job immediately
-    logger.info("Running initial job...")
+    # Schedule klementinum job every 6 hours
+    scheduler.add_job(
+        job_klementinum,
+        'interval',
+        hours=6,
+        id='klementinum',
+        name='Klementinum function',
+        misfire_grace_time=15
+    )
+
+    # Run first jobs immediately
+    logger.info("Running initial jobs...")
     job_popelnice()
+    job_klementinum()
 
     logger.info("Scheduler started. Jobs will run every hour.")
     scheduler.start()

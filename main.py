@@ -7,6 +7,7 @@ from apscheduler.schedulers.background import BackgroundScheduler
 from functions.popelnice import get_popelnice_value
 from functions.klementinum import get_klementinum_values
 from functions.menicka import scrape_menicka_ceske_budejovice
+from functions.zemeplocha import zemeplocha_cs
 
 # Logging setup
 logging.basicConfig(
@@ -75,12 +76,20 @@ def job_menicka():
     call_function("menicka", value)
 
 
+def job_zemeplocha_cs():
+    """Job for zemeplocha_cs function"""
+    values = zemeplocha_cs()
+    if values:
+        call_function_multiple(values)
+
+
 def signal_handler_run_all(signum, frame):
     """SIGUSR1: Run all jobs immediately"""
     logger.info("⚡ Signal SIGUSR1 received - running all jobs")
     job_popelnice()
     job_klementinum()
     job_menicka()
+    job_zemeplocha_cs()
 
 
 def signal_handler_shutdown(signum, frame):
@@ -139,11 +148,22 @@ def main():
         misfire_grace_time=15
     )
 
+    # Schedule zemeplocha job every 12 hours
+    scheduler.add_job(
+        job_zemeplocha_cs,
+        'interval',
+        hours=12,
+        id='zemeplocha_cs',
+        name='Zemeplocha function',
+        misfire_grace_time=15
+    )
+
     # Run first jobs immediately
     logger.info("Running initial jobs...")
     job_popelnice()
     job_klementinum()
     job_menicka()
+    job_zemeplocha_cs()
 
     logger.info("Scheduler started. Jobs will run every hour.")
     scheduler.start()

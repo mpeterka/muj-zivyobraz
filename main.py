@@ -8,6 +8,7 @@ from functions.popelnice import get_popelnice_value
 from functions.klementinum import get_klementinum_values
 from functions.menicka import scrape_menicka_ceske_budejovice
 from functions.zemeplocha import zemeplocha_cs
+from functions.fortunes import pratchett, plihal, cimrman
 
 # Logging setup
 logging.basicConfig(
@@ -83,6 +84,27 @@ def job_zemeplocha_cs():
         call_function_multiple(values)
 
 
+def job_pratchett():
+    """Job for pratchett function"""
+    values = pratchett()
+    if values:
+        call_function_multiple(values)
+
+
+def job_plihal():
+    """Job for plihal function"""
+    values = plihal()
+    if values:
+        call_function_multiple(values)
+
+
+def job_cimrman():
+    """Job for cimrman function"""
+    values = cimrman()
+    if values:
+        call_function_multiple(values)
+
+
 def signal_handler_run_all(signum, frame):
     """SIGUSR1: Run all jobs immediately"""
     logger.info("⚡ Signal SIGUSR1 received - running all jobs")
@@ -90,6 +112,9 @@ def signal_handler_run_all(signum, frame):
     job_klementinum()
     job_menicka()
     job_zemeplocha_cs()
+    job_pratchett()
+    job_plihal()
+    job_cimrman()
 
 
 def signal_handler_shutdown(signum, frame):
@@ -158,12 +183,45 @@ def main():
         misfire_grace_time=15
     )
 
+    # Schedule pratchett job every 12 hours
+    scheduler.add_job(
+        job_pratchett,
+        'interval',
+        hours=12,
+        id='pratchett',
+        name='Pratchett function',
+        misfire_grace_time=15
+    )
+
+    # Schedule plihal job every 12 hours
+    scheduler.add_job(
+        job_plihal,
+        'interval',
+        hours=12,
+        id='plihal',
+        name='Plihal function',
+        misfire_grace_time=15
+    )
+
+    # Schedule cimrman job every 12 hours
+    scheduler.add_job(
+        job_cimrman,
+        'interval',
+        hours=12,
+        id='cimrman',
+        name='Cimrman function',
+        misfire_grace_time=15
+    )
+
     # Run first jobs immediately
     logger.info("Running initial jobs...")
     job_popelnice()
     job_klementinum()
     job_menicka()
     job_zemeplocha_cs()
+    job_pratchett()
+    job_plihal()
+    job_cimrman()
 
     logger.info("Scheduler started. Jobs will run every hour.")
     scheduler.start()

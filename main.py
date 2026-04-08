@@ -6,6 +6,7 @@ import logging
 from apscheduler.schedulers.background import BackgroundScheduler
 from functions.popelnice import get_popelnice_value
 from functions.klementinum import get_klementinum_values
+from functions.menicka import scrape_menicka_ceske_budejovice
 
 # Logging setup
 logging.basicConfig(
@@ -68,11 +69,18 @@ def job_klementinum():
         call_function_multiple(values)
 
 
+def job_menicka():
+    """Job for menicka function"""
+    value = scrape_menicka_ceske_budejovice()
+    call_function("menicka", value)
+
+
 def signal_handler_run_all(signum, frame):
     """SIGUSR1: Run all jobs immediately"""
     logger.info("⚡ Signal SIGUSR1 received - running all jobs")
     job_popelnice()
     job_klementinum()
+    job_menicka()
 
 
 def signal_handler_shutdown(signum, frame):
@@ -121,10 +129,21 @@ def main():
         misfire_grace_time=15
     )
 
+    # Schedule menicka job every 12 hours
+    scheduler.add_job(
+        job_menicka,
+        'interval',
+        hours=12,
+        id='menicka',
+        name='Menicka function',
+        misfire_grace_time=15
+    )
+
     # Run first jobs immediately
     logger.info("Running initial jobs...")
     job_popelnice()
     job_klementinum()
+    job_menicka()
 
     logger.info("Scheduler started. Jobs will run every hour.")
     scheduler.start()

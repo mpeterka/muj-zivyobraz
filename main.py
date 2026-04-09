@@ -8,7 +8,7 @@ from functions.popelnice import get_popelnice_value
 from functions.klementinum import get_klementinum_values
 from functions.menicka import scrape_menicka_ceske_budejovice
 from functions.zemeplocha import zemeplocha_cs
-from functions.fortunes import pratchett, plihal, cimrman
+from functions.fortunes import pratchet, plihal, cimrman, klsk_cz, vodnsnky, zemplcha
 
 # Logging setup
 logging.basicConfig(
@@ -84,9 +84,9 @@ def job_zemeplocha_cs():
         call_function_multiple(values)
 
 
-def job_pratchett():
-    """Job for pratchett function"""
-    values = pratchett()
+def job_pratchet():
+    """Job for pratchet function"""
+    values = pratchet()
     if values:
         call_function_multiple(values)
 
@@ -105,6 +105,27 @@ def job_cimrman():
         call_function_multiple(values)
 
 
+def job_klsk_cz():
+    """Job for klsk_cz function"""
+    values = klsk_cz()
+    if values:
+        call_function_multiple(values)
+
+
+def job_vodnsnky():
+    """Job for vodnsnky function"""
+    values = vodnsnky()
+    if values:
+        call_function_multiple(values)
+
+
+def job_zemplcha():
+    """Job for zemplcha function"""
+    values = zemplcha()
+    if values:
+        call_function_multiple(values)
+
+
 def signal_handler_run_all(signum, frame):
     """SIGUSR1: Run all jobs immediately"""
     logger.info("⚡ Signal SIGUSR1 received - running all jobs")
@@ -112,9 +133,12 @@ def signal_handler_run_all(signum, frame):
     job_klementinum()
     job_menicka()
     job_zemeplocha_cs()
-    job_pratchett()
+    job_pratchet()
     job_plihal()
     job_cimrman()
+    job_klsk_cz()
+    job_vodnsnky()
+    job_zemplcha()
 
 
 def signal_handler_shutdown(signum, frame):
@@ -183,13 +207,13 @@ def main():
         misfire_grace_time=15
     )
 
-    # Schedule pratchett job every 12 hours
+    # Schedule pratchet job every 12 hours
     scheduler.add_job(
-        job_pratchett,
+        job_pratchet,
         'interval',
         hours=12,
-        id='pratchett',
-        name='Pratchett function',
+        id='pratchet',
+        name='Pratchet function',
         misfire_grace_time=15
     )
 
@@ -213,15 +237,48 @@ def main():
         misfire_grace_time=15
     )
 
+    # Schedule klsk_cz job every 12 hours
+    scheduler.add_job(
+        job_klsk_cz,
+        'interval',
+        hours=12,
+        id='klsk_cz',
+        name='Klsk CZ function',
+        misfire_grace_time=15
+    )
+
+    # Schedule vodnsnky job every 12 hours
+    scheduler.add_job(
+        job_vodnsnky,
+        'interval',
+        hours=12,
+        id='vodnsnky',
+        name='Vodnsnky function',
+        misfire_grace_time=15
+    )
+
+    # Schedule zemplcha job every 12 hours
+    scheduler.add_job(
+        job_zemplcha,
+        'interval',
+        hours=12,
+        id='zemplcha',
+        name='Zemplcha function',
+        misfire_grace_time=15
+    )
+
     # Run first jobs immediately
     logger.info("Running initial jobs...")
     job_popelnice()
     job_klementinum()
     job_menicka()
     job_zemeplocha_cs()
-    job_pratchett()
+    job_pratchet()
     job_plihal()
     job_cimrman()
+    job_klsk_cz()
+    job_vodnsnky()
+    job_zemplcha()
 
     logger.info("Scheduler started. Jobs will run every hour.")
     scheduler.start()

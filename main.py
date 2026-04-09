@@ -9,6 +9,7 @@ from functions.klementinum import get_klementinum_values
 from functions.menicka import scrape_menicka_ceske_budejovice
 from functions.zemeplocha import zemeplocha_cs
 from functions.fortunes import pratchet, plihal, cimrman, klsk_cz, vodnsnky, zemplcha
+from functions.wiki import get_wiki_dnesek_v_minulosti
 
 # Logging setup
 logging.basicConfig(
@@ -126,6 +127,13 @@ def job_zemplcha():
         call_function_multiple(values)
 
 
+def job_wiki_dnesek_v_minulosti():
+    """Job for wiki_dnesek_v_minulosti function"""
+    values = get_wiki_dnesek_v_minulosti()
+    if values:
+        call_function_multiple(values)
+
+
 def signal_handler_run_all(signum, frame):
     """SIGUSR1: Run all jobs immediately"""
     logger.info("⚡ Signal SIGUSR1 received - running all jobs")
@@ -139,6 +147,7 @@ def signal_handler_run_all(signum, frame):
     job_klsk_cz()
     job_vodnsnky()
     job_zemplcha()
+    job_wiki_dnesek_v_minulosti()
 
 
 def signal_handler_shutdown(signum, frame):
@@ -267,6 +276,16 @@ def main():
         misfire_grace_time=15
     )
 
+    # Schedule wiki_dnesek_v_minulosti job every 12 hours
+    scheduler.add_job(
+        job_wiki_dnesek_v_minulosti,
+        'interval',
+        hours=12,
+        id='wiki_dnesek_v_minulosti',
+        name='Wiki Dnesek v minulosti function',
+        misfire_grace_time=15
+    )
+
     # Run first jobs immediately
     logger.info("Running initial jobs...")
     job_popelnice()
@@ -279,6 +298,7 @@ def main():
     job_klsk_cz()
     job_vodnsnky()
     job_zemplcha()
+    job_wiki_dnesek_v_minulosti()
 
     logger.info("Scheduler started. Jobs will run every hour.")
     scheduler.start()

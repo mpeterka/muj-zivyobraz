@@ -72,6 +72,16 @@ def get_wiki_dnesek_v_minulosti():
 
     soup = BeautifulSoup(resp.text, "html.parser")
 
+    # Najdi nadpis sekce (např. "17. duben v minulosti")
+    heading_text = None
+    heading = soup.find(
+        lambda tag: tag.name in ("h2", "h3", "h4", "span")
+        and tag.get_text(strip=True)
+        and re.search(r"^\s*V\s+minulosti", tag.get_text(strip=True), re.IGNORECASE)
+    )
+    if heading:
+        heading_text = _normalize_whitespace(heading.get_text(strip=True))
+
     block = _find_v_minulosti_block(soup)
     if not block:
         return {"wiki_dnesek_v_minulosti": "Sekce 'V minulosti' nenalezena."}
@@ -82,10 +92,12 @@ def get_wiki_dnesek_v_minulosti():
         # Odstraníme nežádoucí elementy jako obrázky a jejich titulky, které mohou generovat text jako "0"
         for tag in li.find_all(["img", "figure", "figcaption"]):
             tag.decompose()
-            
+
         txt = _normalize_whitespace(li.get_text(" ", strip=True))
         # Odstranění úvodních čísel (často artefakt z meta-dat nebo obrázků na wiki)
         txt = re.sub(r"^[0\s]+", "", txt)
+        # Odstranění výskytu "(na obrázku)"
+        txt = re.sub(r"\s*\(na obrázku\)", "", txt)
         if txt:
             items.append(txt)
     if not items:
@@ -93,6 +105,7 @@ def get_wiki_dnesek_v_minulosti():
         for p in block.find_all("p", recursive=True):
             txt = _normalize_whitespace(p.get_text(" ", strip=True))
             txt = re.sub(r"^[0\s]+", "", txt)
+            txt = re.sub(r"\s*\(na obrázku\)", "", txt)
             if txt:
                 items.append(txt)
 
@@ -103,6 +116,8 @@ def get_wiki_dnesek_v_minulosti():
     items = items[:5]
 
     text = "\n".join(items)
+    if heading_text:
+        text = f"{heading_text}\n{text}"
     return {"wiki_dnesek_v_minulosti": text}
 
 

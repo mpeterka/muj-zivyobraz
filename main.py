@@ -8,6 +8,7 @@ from functions.popelnice import get_popelnice_value
 from functions.klementinum import get_klementinum_values
 from functions.menicka import scrape_menicka_ceske_budejovice
 from functions.zemeplocha import zemeplocha_cs
+from functions.faze_mesice import faze_mesice
 from functions.fortunes import pratchet, plihal, cimrman, klsk_cz, vodnsnky, zemplcha
 from functions.wiki import get_wiki_dnesek_v_minulosti
 
@@ -127,6 +128,13 @@ def job_zemplcha():
         call_function_multiple(values)
 
 
+def job_faze_mesice():
+    """Job for faze_mesice function"""
+    payload = faze_mesice()
+    if payload:
+        call_function("faze_mesice", payload["symbol"])
+
+
 def job_wiki_dnesek_v_minulosti():
     """Job for wiki_dnesek_v_minulosti function"""
     values = get_wiki_dnesek_v_minulosti()
@@ -147,6 +155,7 @@ def signal_handler_run_all(signum, frame):
     job_klsk_cz()
     job_vodnsnky()
     job_zemplcha()
+    job_faze_mesice()
     job_wiki_dnesek_v_minulosti()
 
 
@@ -286,6 +295,15 @@ def main():
         misfire_grace_time=15
     )
 
+    scheduler.add_job(
+        job_faze_mesice,
+        'interval',
+        hours=6,
+        id='faze_mesice',
+        name='Faze mesice function',
+        misfire_grace_time=15
+    )
+
     # Run first jobs immediately
     logger.info("Running initial jobs...")
     job_popelnice()
@@ -298,6 +316,7 @@ def main():
     job_klsk_cz()
     job_vodnsnky()
     job_zemplcha()
+    job_faze_mesice()
     job_wiki_dnesek_v_minulosti()
 
     logger.info("Scheduler started. Jobs will run every hour.")

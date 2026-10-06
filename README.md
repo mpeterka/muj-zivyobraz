@@ -2,6 +2,25 @@
 
 Aplikace běží v cyklu a jednou za hodinu odesílá data do `zivyobraz.eu` API.
 
+Meníčka se aktualizují každý den v 7:00–14:00 každou hodinu a v 18:00
+v časové zóně `Europe/Prague`, také při spuštění aplikace. Načítá se pouze
+nabídka pro dnešní datum; české znaky a mezery se upraví před zkrácením názvů.
+
+Klementinum používá oficiální CSV z
+[otevřených dat ČHMÚ](https://opendata.chmi.cz/meteorology/climate/historical_csv/data/daily/temperature/)
+pro stanici `0-203-0-11514`. Minimum a maximum jsou historické denní extrémy
+z dostupných ukončených let od roku 1775. Průměr je aritmetický průměr
+denních průměrů pro stejné kalendářní datum z tohoto období, nikoliv klimatický
+normál 1991–2020. Používají se pouze hodnoty s dobrou kvalitou (`QUALITY=0`).
+Soubory se čtou postupně a výsledky pro aktuální měsíc se ukládají do paměti;
+při změně měsíce nebo restartu se načtou znovu. Při chybě se prázdná data neodesílají.
+
+## Testy
+
+```shell
+python -m unittest discover -v
+```
+
 ## Funkce
 
 ### Popelnice

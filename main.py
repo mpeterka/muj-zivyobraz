@@ -205,14 +205,16 @@ def main():
         misfire_grace_time=15
     )
 
-    # Schedule menicka job every 12 hours
+    # Refresh while restaurants publish lunch menus, using Czech local time.
     scheduler.add_job(
         job_menicka,
-        'interval',
-        hours=12,
+        'cron',
+        hour='7-14,18',
+        minute=0,
+        timezone='Europe/Prague',
         id='menicka',
         name='Menicka function',
-        misfire_grace_time=15
+        misfire_grace_time=300
     )
 
     # Schedule zemeplocha job every 12 hours

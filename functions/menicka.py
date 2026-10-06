@@ -1,6 +1,8 @@
 import requests
 from bs4 import BeautifulSoup
 import re
+from datetime import datetime
+from zoneinfo import ZoneInfo
 
 
 # Mapování názvů restaurací na jejich ID v URL
@@ -19,6 +21,7 @@ def scrape_menicka_ceske_budejovice():
     Vrací string ve formátu: Restaurace: jídlo | jídlo | jídlo\nRestaurace 2: ...\n
     """
     result = []
+    today = datetime.now(ZoneInfo('Europe/Prague')).date()
 
     for rest_name, rest_url_part in RESTAURANTS.items():
         url = f"https://www.menicka.cz/{rest_url_part}.html"
@@ -26,11 +29,19 @@ def scrape_menicka_ceske_budejovice():
 
         try:
             response = requests.get(url, timeout=10)
-            response.encoding = 'cp1250'  # Web používá windows-1250
-            soup = BeautifulSoup(response.text, 'html.parser')
+            response.raise_for_status()
+            soup = BeautifulSoup(response.content, 'html.parser')
 
             # Hledáme všechny <li> elementy s třídami 'polevka' nebo 'jidlo'
-            menu_items = soup.find_all('li', class_=['polevka', 'jidlo'])
+            menu_items = []
+            for menu in soup.find_all('div', class_='menicka'):
+                heading = menu.find('div', class_='nadpis')
+                if not heading:
+                    continue
+                date = re.search(r'\b(\d{1,2})\.\s*(\d{1,2})\.\s*(\d{4})\b', heading.get_text())
+                if date and tuple(map(int, date.groups())) == (today.day, today.month, today.year):
+                    menu_items = menu.find_all('li', class_=['polevka', 'jidlo'])
+                    break
 
             for item in menu_items:
                 # Extrahujeme text z <div class='polozka'>
@@ -40,10 +51,10 @@ def scrape_menicka_ceske_budejovice():
                     for span in polozka_div.find_all('span', class_='poradi'):
                         span.decompose()
 
-                    text = polozka_div.get_text(strip=True)
+                    text = ' '.join(polozka_div.get_text(' ', strip=True).split())
                     # Odstraníme zbytkové čísla/písmena na konci (zbytky po parsování)
                     # Odstraníme na začátku: 150g, 0, 25l, atd.
-                    text = re.sub(r'^[0-9\s,\.]*[gklsšč]*\s*', '', text)
+                    text = re.sub(r'^/?\s*\d+(?:\s*[,\.]\s*\d+)?\s*(?:kg|g|ml|l|ks)\b\s*', '', text)
                     # Odstraníme na konci: 49, 137, 1711, atd.
                     text = re.sub(r'\s*[0-9]+\s*$', '', text)
                     text = text.strip()

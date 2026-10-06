@@ -29,6 +29,9 @@ class MenuScheduleTest(unittest.TestCase):
             self.assertEqual(next_time.tzinfo.zone, 'Europe/Prague')
         now = datetime(2026, 7, 6, 12, 1, tzinfo=timezone.utc)
         self.assertEqual(trigger.get_next_fire_time(None, now).hour, 18)
+        jokes = main.scheduler.get_job('vtipy')
+        self.assertIsNotNone(jokes)
+        self.assertEqual(jokes.trigger.interval.total_seconds(), 6 * 3600)
 
 
 if __name__ == '__main__':

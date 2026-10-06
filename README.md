@@ -15,6 +15,12 @@ normál 1991–2020. Používají se pouze hodnoty s dobrou kvalitou (`QUALITY=0
 Soubory se čtou postupně a výsledky pro aktuální měsíc se ukládají do paměti;
 při změně měsíce nebo restartu se načtou znovu. Při chybě se prázdná data neodesílají.
 
+Proměnná `vtipy` obsahuje jeden náhodný český vtip z Alíkova veřejného
+vkládacího skriptu. Aktualizuje se při startu a každých 6 hodin.
+Vybírají se celé vtipy do 300 znaků, bez doplněného dovětku se zdrojem.
+Pokud zdroj neodpovídá nebo nenabídne dostatečně krátký vtip, předchozí
+hodnota na Živém obrazu zůstane zachována.
+
 ## Testy
 
 ```shell

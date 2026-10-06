@@ -11,6 +11,7 @@ from functions.zemeplocha import zemeplocha_cs
 from functions.faze_mesice import faze_mesice
 from functions.fortunes import pratchet, plihal, cimrman, klsk_cz, vodnsnky, zemplcha
 from functions.wiki import get_wiki_dnesek_v_minulosti
+from functions.vtipy import get_vtipy_values
 
 # Logging setup
 logging.basicConfig(
@@ -142,6 +143,12 @@ def job_wiki_dnesek_v_minulosti():
         call_function_multiple(values)
 
 
+def job_vtipy():
+    values = get_vtipy_values()
+    if values:
+        call_function_multiple(values)
+
+
 def signal_handler_run_all(signum, frame):
     """SIGUSR1: Run all jobs immediately"""
     logger.info("⚡ Signal SIGUSR1 received - running all jobs")
@@ -157,6 +164,7 @@ def signal_handler_run_all(signum, frame):
     job_zemplcha()
     job_faze_mesice()
     job_wiki_dnesek_v_minulosti()
+    job_vtipy()
 
 
 def signal_handler_shutdown(signum, frame):
@@ -306,6 +314,16 @@ def main():
         misfire_grace_time=15
     )
 
+    # Refresh the joke every six hours.
+    scheduler.add_job(
+        job_vtipy,
+        'interval',
+        hours=6,
+        id='vtipy',
+        name='Vtipy function',
+        misfire_grace_time=300
+    )
+
     # Run first jobs immediately
     logger.info("Running initial jobs...")
     job_popelnice()
@@ -320,6 +338,7 @@ def main():
     job_zemplcha()
     job_faze_mesice()
     job_wiki_dnesek_v_minulosti()
+    job_vtipy()
 
     logger.info("Scheduler started. Jobs will run every hour.")
     scheduler.start()

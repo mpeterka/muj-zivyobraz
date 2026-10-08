@@ -10,7 +10,7 @@ from functions.menicka import scrape_menicka_ceske_budejovice
 from functions.zemeplocha import zemeplocha_cs
 from functions.faze_mesice import faze_mesice
 from functions.fortunes import pratchet, plihal, cimrman, klsk_cz, vodnsnky, zemplcha
-from functions.wiki import get_wiki_dnesek_v_minulosti
+from functions.wiki import get_wiki_dnesek_v_minulosti, get_wiki_aktuality
 from functions.vtipy import get_vtipy_values
 
 # Logging setup
@@ -143,6 +143,12 @@ def job_wiki_dnesek_v_minulosti():
         call_function_multiple(values)
 
 
+def job_wiki_aktuality():
+    values = get_wiki_aktuality()
+    if values:
+        call_function_multiple(values)
+
+
 def job_vtipy():
     values = get_vtipy_values()
     if values:
@@ -164,6 +170,7 @@ def signal_handler_run_all(signum, frame):
     job_zemplcha()
     job_faze_mesice()
     job_wiki_dnesek_v_minulosti()
+    job_wiki_aktuality()
     job_vtipy()
 
 
@@ -295,14 +302,27 @@ def main():
         misfire_grace_time=15
     )
 
-    # Schedule wiki_dnesek_v_minulosti job every 12 hours
+    # Refresh before the morning screen and later in the day, in Czech time.
     scheduler.add_job(
         job_wiki_dnesek_v_minulosti,
-        'interval',
-        hours=12,
+        'cron',
+        hour='5,12,18',
+        minute=0,
+        timezone='Europe/Prague',
         id='wiki_dnesek_v_minulosti',
         name='Wiki Dnesek v minulosti function',
-        misfire_grace_time=15
+        misfire_grace_time=300
+    )
+
+    scheduler.add_job(
+        job_wiki_aktuality,
+        'cron',
+        hour='5,12,18',
+        minute=0,
+        timezone='Europe/Prague',
+        id='wiki_aktuality',
+        name='Wiki Aktuality function',
+        misfire_grace_time=300
     )
 
     scheduler.add_job(
@@ -338,6 +358,7 @@ def main():
     job_zemplcha()
     job_faze_mesice()
     job_wiki_dnesek_v_minulosti()
+    job_wiki_aktuality()
     job_vtipy()
 
     logger.info("Scheduler started. Jobs will run every hour.")

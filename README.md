@@ -23,6 +23,15 @@ hodnota na Živém obrazu zůstane zachována.
 
 ## Testy
 
+Wikipedie se načítá při startu a v 5:00, 12:00 a 18:00 (`Europe/Prague`).
+`wiki_dnesek_v_minulosti` obsahuje až pět výročí a
+`wiki_dnesek_v_minulosti_datum` datum z nadpisu stejné stažené sekce
+(například `8. říjen`). Nadpis obrazovky používá
+`{{wiki_dnesek_v_minulosti_datum}} v minulosti`.
+`wiki_aktuality` obsahuje až pět nejnovějších datovaných zpráv z
+[Portálu:Aktuality](https://cs.wikipedia.org/wiki/Port%C3%A1l:Aktuality).
+Při chybě nebo chybějícím obsahu se předchozí hodnoty zachovají.
+
 ```shell
 python -m unittest discover -v
 ```

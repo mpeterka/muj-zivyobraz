@@ -53,19 +53,19 @@ MoonApp is WSGI and owns a single phase slot, render lock and token bucket.
 Files: nginx/*.conf, docker-compose.yml, test_nginx_integration.py, README.md.
 Consumes: /moon.png plus Cache-Control, ETag, X-Accel-Expires and attribution headers.
 
-- [ ] Add reproducible real-nginx integration checks for canonical cache HIT,
+- [x] Add reproducible real-nginx integration checks for canonical cache HIT,
   style separation, duplicate rejection, spoofed headers, HEAD/ETag and rate limits.
-- [ ] Run `docker compose config --quiet`, nginx -t and the integration checks.
-- [ ] Measure 1024px render cost and container memory; run full unittest suite.
-- [ ] Document proxy integration, source licensing and operational limits.
-- [ ] Review final diff; preserve clean verified changes on feature/moon-image.
+- [x] Run `docker compose config --quiet`, nginx -t and the integration checks.
+- [x] Measure 1024px render cost and container memory; run full unittest suite.
+- [x] Document proxy integration, source licensing and operational limits.
+- [x] Review final diff; preserve clean verified changes on feature/moon-image.
 
 ## Task 4: Hosting and Noční widget
 
-- [ ] Identify user-provided public domain/server and existing nginx deployment.
-- [ ] Deploy and verify both public PNG style URLs.
-- [ ] Replace the top-right moon symbol in Noční with an image widget using voyage.
-- [ ] Save and verify the screen preview; record old widget values for recovery.
+- [x] Identify user-provided public domain/server and existing nginx deployment.
+- [x] Deploy and verify both public PNG style URLs.
+- [x] Replace the top-right moon symbol in Noční with an image widget using voyage.
+- [x] Save and verify the screen preview; record old widget values for recovery.
 
 ## Execution record
 
@@ -75,4 +75,17 @@ Native worktree creation returned "Not a git repository" because the chat root i
 W:/mpeterka; fallback worktree is W:/_wt/muj-zivyobraz-moon, branch feature/moon-image.
 Baseline: 32 tests passed after installing existing dependencies into local .venv.
 Docker Desktop was initially stopped; started hidden for isolated integration tests.
-Hosting question is pending; local work continues independently.
+Hosted on karotka.peterka.name through existing HTTPS nginx, with two new internal
+containers and the image tag moon-0b2a04d (registry digest
+sha256:f6822a66c41ddb3a710a19cfd1a3bc8ff8773bd3c9d12b01da78eee3bd45d21e).
+Built on the server from the tracked 0b2a04d snapshot over the earlier deployed
+image; Python dependencies are unchanged. Existing services were not restarted.
+Final validation: 54 unittest cases (53 passed, nginx case skipped in ordinary
+discovery); nginx integration separately passed. Public real/voyage PNGs, black
+background, transparency and duplicate-background rejection verified. Static
+review found no blockers. Render and cache HIT logs verified on server.
+Screen Noční (6925): image x=854, y=14, 128x128, layer 2, voyage,
+background-color=%23000. Extra portal dithering disabled because PNG already
+uses Floyd–Steinberg. Saved and reloaded; preview has no white background box.
+Old moon-stars icon is hidden for recovery: x=888, y=48, size=60, black,
+rotation=0, layer=2. Private screen proof is kept in ignored .superpowers/deploy.

@@ -175,3 +175,8 @@ Při spuštění zobrazí své PID:
 
 Hodnoty slunce_zitra_vychod, slunce_zitra_zapad a slunce_zitra_datum pro Ceske Budejovice. Zdroj: MET Norway Sunrise 3.0 (https://api.met.no/weatherapi/sunrise/3.0/documentation), licence https://api.met.no/license_data.html. Aktualizace pri startu a v 00:00, 06:00, 12:00 a 18:00 v Europe/Prague.
 
+
+### Pranostika
+
+Hodnota pranostika vybira kratkou pranostiku pro aktualni den z ceskych Wikicitatu. Pokud pro den chybi, pouzije pranostiku pro aktualni mesic. Zdroj: https://cs.wikiquote.org/wiki/Pranostiky (CC BY-SA), odkaz na konkretni mesic v pranostika_zdroj. Aktualizace pri startu a v 00:00, 06:00, 12:00, 18:00 Europe/Prague.
+

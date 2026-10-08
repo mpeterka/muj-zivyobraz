@@ -14,6 +14,7 @@ from functions.wiki import get_wiki_dnesek_v_minulosti, get_wiki_aktuality
 from functions.vtipy import get_vtipy_values
 from functions.detske_prace import get_detske_prace_values
 from functions.slunce import get_slunce_zitra_values
+from functions.pranostika import get_pranostika_values
 
 # Logging setup
 logging.basicConfig(
@@ -87,6 +88,12 @@ def job_detske_prace():
 
 def job_slunce_zitra():
     values = get_slunce_zitra_values()
+    if values:
+        call_function_multiple(values)
+
+
+def job_pranostika():
+    values = get_pranostika_values()
     if values:
         call_function_multiple(values)
 
@@ -174,6 +181,7 @@ def signal_handler_run_all(signum, frame):
     job_menicka()
     job_detske_prace()
     job_slunce_zitra()
+    job_pranostika()
     job_zemeplocha_cs()
     job_pratchet()
     job_plihal()
@@ -260,6 +268,11 @@ def main():
         job_slunce_zitra, 'cron', hour='0,6,12,18', minute=0,
         timezone='Europe/Prague', id='slunce_zitra',
         misfire_grace_time=300
+    )
+
+    scheduler.add_job(
+        job_pranostika, 'cron', hour='0,6,12,18', minute=0,
+        timezone='Europe/Prague', id='pranostika', misfire_grace_time=300
     )
 
     # Schedule zemeplocha job every 12 hours
@@ -381,6 +394,7 @@ def main():
     job_menicka()
     job_detske_prace()
     job_slunce_zitra()
+    job_pranostika()
     job_zemeplocha_cs()
     job_pratchet()
     job_plihal()

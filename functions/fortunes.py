@@ -1,5 +1,6 @@
 import random
 import os
+import re
 
 def _get_fortune(filename, key):
     """
@@ -22,7 +23,7 @@ def _get_fortune(filename, key):
     if not quotes:
         return {key: "Žádné citace nenalezeny."}
         
-    return {key: random.choice(quotes)}
+    return {key: re.sub(r'\t+', ' ', random.choice(quotes))}
 
 def cimrman():
     return _get_fortune("cimrman", "cimrman")

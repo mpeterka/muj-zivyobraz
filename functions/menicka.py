@@ -76,9 +76,9 @@ def get_menicka_values():
                 result.append(f"{rest_name}: {dishes_str}")
                 lines = []
                 for text in top_dishes:
-                    if len(text) > 25:
-                        shortened = text[:25]
-                        if text[25] != ' ' and ' ' in shortened:
+                    if len(text) > 65:
+                        shortened = text[:65]
+                        if text[65] != ' ' and ' ' in shortened:
                             shortened = shortened.rsplit(' ', 1)[0]
                         text = shortened.rstrip() + '…'
                     lines.append(text)

@@ -9,7 +9,7 @@ nabídka pro dnešní datum; české znaky a mezery se upraví před zkrácením
 Původní `menicka` zachovává stejný formát i limit 25 znaků. Samostatné hodnoty
 `menicka_nase_farma`, `menicka_sedlaci`, `menicka_klika`, `menicka_krajinska_27`
 a `menicka_solnice` obsahují nejvýše pět jídel, každé na vlastním řádku;
-názvy se zkracují do 25 znaků na hranici slova a doplňují znakem `…`.
+názvy se zkracují do 65 znaků na hranici slova a doplňují znakem `…`.
 Obrazovka 6924 používá pět dvojic `menicka_1_restaurace` / `menicka_1_jidla`
 až `menicka_5_restaurace` / `menicka_5_jidla`. Obsazené bloky obsahují pouze
 restaurace s dnešní nabídkou; neobsazené hodnoty se vyprázdní.

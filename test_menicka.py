@@ -27,7 +27,7 @@ class MenickaTest(unittest.TestCase):
           <li class="jidlo"><div class="polozka">Kuřecí řízek</div></li></div>'''
         values = self.scrape(html, values=True)
         self.assertEqual(values['menicka'], 'Test: Hovězí vývar s domácími n... | Kuřecí řízek')
-        self.assertEqual(values['menicka_test'], 'Hovězí vývar s domácími…\nKuřecí řízek')
+        self.assertEqual(values['menicka_test'], 'Hovězí vývar s domácími nudlemi\nKuřecí řízek')
         self.assertEqual(values['menicka_1_restaurace'], 'Test')
         self.assertEqual(values['menicka_1_jidla'], values['menicka_test'])
         self.assertEqual(values['menicka_2_restaurace'], '')
@@ -51,9 +51,18 @@ class MenickaTest(unittest.TestCase):
     def test_five_dish_bound_and_long_first_word(self):
         html = '<div class="menicka"><div class="nadpis">6.10.2026</div>'
         html += ''.join(f'<li class="jidlo"><div class="polozka">{dish}</div></li>' for dish in (
-            'ABCDEFGHIJKLMNOPQRSTUVWXYZ příloha', 'Druhé', 'Třetí', 'Čtvrté', 'Páté', 'Šesté'))
+            'A' * 70 + ' příloha', 'Druhé', 'Třetí', 'Čtvrté', 'Páté', 'Šesté'))
         values = self.scrape(html + '</div>', values=True)
-        self.assertEqual(values['menicka_test'], 'ABCDEFGHIJKLMNOPQRSTUVWXY…\nDruhé\nTřetí\nČtvrté\nPáté')
+        self.assertEqual(values['menicka_test'], 'A' * 65 + '…\nDruhé\nTřetí\nČtvrté\nPáté')
+
+    def test_longer_dish_keeps_side_and_cuts_only_at_word_boundary(self):
+        dish = 'Italské karbanátky s rajčatovou omáčkou a šťouchanými bramborami'
+        html = '<meta charset="UTF-8"><div class="menicka"><div class="nadpis">6.10.2026</div>'
+        html += f'<li class="jidlo"><div class="polozka">{dish}</div></li></div>'
+        self.assertEqual(self.scrape(html, values=True)['menicka_1_jidla'], dish)
+        longer = dish + ' a zeleninovým salátem'
+        values = self.scrape(html.replace(dish, longer), values=True)
+        self.assertEqual(values['menicka_1_jidla'], dish + '…')
 
     def test_display_slots_skip_unavailable_restaurants(self):
         response = requests.Response()

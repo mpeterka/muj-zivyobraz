@@ -34,12 +34,12 @@ class DetskePraceTest(unittest.TestCase):
         values = detske_prace.get_detske_prace_values(date(2027, 1, 4))
         self.assertEqual(values['detske_prace_majda'], 'myčka')
 
-    def test_changes_on_monday_at_six_in_prague(self):
+    def test_changes_on_monday_at_midnight_in_prague(self):
         for month, day, hour, minute, expected in (
-                (10, 12, 3, 59, 'odpadky a podlahy'),
-                (10, 12, 4, 0, 'myčka'),
-                (10, 26, 4, 59, 'prádlo'),
-                (10, 26, 5, 0, 'odpadky a podlahy')):
+                (10, 11, 21, 59, 'odpadky a podlahy'),
+                (10, 11, 22, 0, 'myčka'),
+                (10, 25, 22, 59, 'prádlo'),
+                (10, 25, 23, 0, 'odpadky a podlahy')):
             with self.subTest(month=month, day=day, hour=hour, minute=minute), \
                     patch.object(detske_prace, 'datetime') as clock:
                 clock.now.side_effect = lambda tz: datetime(2026, month, day, hour, minute,

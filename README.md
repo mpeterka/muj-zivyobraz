@@ -56,8 +56,8 @@ v `detske_prace_majda`, `detske_prace_matej` a `detske_prace_market`.
 Rotace navazuje na kalendář: od 5. 10. 2026 má Majda odpadky a podlahy,
 Matěj prádlo a Markét myčku. Další týden má Majda myčku, Matěj odpadky
 a podlahy a Markét prádlo. Cyklus se opakuje po třech týdnech.
-Služby platí i o víkendu a mění se v pondělí v 6:00 (`Europe/Prague`).
-Hodnoty se obnoví při startu, na SIGUSR1 a denně v 6:00, 12:00 a 18:00.
+Služby platí i o víkendu a mění se v pondělí v 00:00 (`Europe/Prague`).
+Hodnoty se obnoví při startu, na SIGUSR1 a denně v 00:00, 6:00, 12:00 a 18:00.
 Kalendář ani síťový zdroj se pro výpočet nepoužívá.
 
 ### Popelnice

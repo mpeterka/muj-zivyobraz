@@ -237,11 +237,10 @@ def main():
         misfire_grace_time=300
     )
 
-    # Schedule zemeplocha job every 12 hours
     scheduler.add_job(
         job_detske_prace,
         'cron',
-        hour='6,12,18',
+        hour='0,6,12,18',
         minute=0,
         timezone='Europe/Prague',
         id='detske_prace',
@@ -249,6 +248,7 @@ def main():
         misfire_grace_time=300
     )
 
+    # Schedule zemeplocha job every 12 hours
     scheduler.add_job(
         job_zemeplocha_cs,
         'interval',

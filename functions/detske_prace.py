@@ -3,9 +3,9 @@ from zoneinfo import ZoneInfo
 
 
 def get_detske_prace_values(today=None):
-    """Třítýdenní rotace navazující na kalendář, změna v pondělí v 6:00."""
+    """Třítýdenní rotace navazující na kalendář, změna v pondělí o půlnoci."""
     if today is None:
-        today = (datetime.now(ZoneInfo('Europe/Prague')) - timedelta(hours=6)).date()
+        today = datetime.now(ZoneInfo('Europe/Prague')).date()
     monday = today - timedelta(days=today.weekday())
     # Týden 5. 10. 2026: Majda odpadky, Matěj prádlo, Markét myčka.
     week = (monday - date(2026, 10, 5)).days // 7

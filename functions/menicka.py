@@ -93,7 +93,7 @@ def get_menicka_values():
             failed.append(rest_name)
 
     values['menicka'] = '\n'.join(result)
-    values['menicka_datum'] = f'{today.day}. {today.month}. {today.year}'
+    values['menicka_datum'] = f'{today.day}. {today.month}.'
     values['menicka_nacteno'] = datetime.now(ZoneInfo('Europe/Prague')).strftime('%H:%M')
     status = []
     if unavailable:

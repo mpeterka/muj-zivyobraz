@@ -14,7 +14,9 @@ Obrazovka 6924 používá pět dvojic `menicka_1_restaurace` / `menicka_1_jidla`
 až `menicka_5_restaurace` / `menicka_5_jidla`. Obsazené bloky obsahují pouze
 restaurace s dnešní nabídkou; neobsazené hodnoty se vyprázdní.
 `menicka_stav` rozlišuje chybějící nabídku a chybu načtení.
-`menicka_datum` označuje hledaný den nabídky a `menicka_nacteno` čas
+`menicka_datum` označuje hledaný den nabídky ve formátu `D. M.` bez roku;
+obědový nadpis používá `Kam na oběd · {{menicka_datum}}`, aby zůstalo vidět
+stáří nabídky i při výpadku aktualizace. `menicka_nacteno` označuje čas
 dokončení načtení v Praze. Všechny hodnoty se odesílají jedním požadavkem.
 
 Klementinum používá oficiální CSV z

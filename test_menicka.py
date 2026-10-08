@@ -32,7 +32,7 @@ class MenickaTest(unittest.TestCase):
         self.assertEqual(values['menicka_1_jidla'], values['menicka_test'])
         self.assertEqual(values['menicka_2_restaurace'], '')
         self.assertEqual(values['menicka_2_jidla'], '')
-        self.assertEqual(values['menicka_datum'], '6. 10. 2026')
+        self.assertEqual(values['menicka_datum'], '6. 10.')
         self.assertEqual(values['menicka_nacteno'], '10:00')
 
     def test_missing_today_clears_slots_and_reports_unavailable(self):

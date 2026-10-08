@@ -12,6 +12,7 @@ from functions.faze_mesice import faze_mesice
 from functions.fortunes import pratchet, plihal, cimrman, klsk_cz, vodnsnky, zemplcha
 from functions.wiki import get_wiki_dnesek_v_minulosti, get_wiki_aktuality
 from functions.vtipy import get_vtipy_values
+from functions.detske_prace import get_detske_prace_values
 
 # Logging setup
 logging.basicConfig(
@@ -77,6 +78,10 @@ def job_klementinum():
 def job_menicka():
     """Job for menicka function"""
     call_function_multiple(get_menicka_values())
+
+
+def job_detske_prace():
+    call_function_multiple(get_detske_prace_values())
 
 
 def job_zemeplocha_cs():
@@ -160,6 +165,7 @@ def signal_handler_run_all(signum, frame):
     job_popelnice()
     job_klementinum()
     job_menicka()
+    job_detske_prace()
     job_zemeplocha_cs()
     job_pratchet()
     job_plihal()
@@ -232,6 +238,17 @@ def main():
     )
 
     # Schedule zemeplocha job every 12 hours
+    scheduler.add_job(
+        job_detske_prace,
+        'cron',
+        hour='6,12,18',
+        minute=0,
+        timezone='Europe/Prague',
+        id='detske_prace',
+        name='Detske prace function',
+        misfire_grace_time=300
+    )
+
     scheduler.add_job(
         job_zemeplocha_cs,
         'interval',
@@ -348,6 +365,7 @@ def main():
     job_popelnice()
     job_klementinum()
     job_menicka()
+    job_detske_prace()
     job_zemeplocha_cs()
     job_pratchet()
     job_plihal()

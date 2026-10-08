@@ -49,6 +49,17 @@ python -m unittest discover -v
 
 ## Funkce
 
+### Dětské služby
+`detske_prace` obsahuje tři řádky v pořadí Majda, Matěj, Markét.
+`detske_prace_nadpis` je „Služby tento týden“; jednotlivé úkoly jsou také
+v `detske_prace_majda`, `detske_prace_matej` a `detske_prace_market`.
+Rotace navazuje na kalendář: od 5. 10. 2026 má Majda odpadky a podlahy,
+Matěj prádlo a Markét myčku. Další týden má Majda myčku, Matěj odpadky
+a podlahy a Markét prádlo. Cyklus se opakuje po třech týdnech.
+Služby platí i o víkendu a mění se v pondělí v 6:00 (`Europe/Prague`).
+Hodnoty se obnoví při startu, na SIGUSR1 a denně v 6:00, 12:00 a 18:00.
+Kalendář ani síťový zdroj se pro výpočet nepoužívá.
+
 ### Popelnice
 Odesílá stav popelnice:
 - **pondělí**: `trash3-fill` (naplný den)

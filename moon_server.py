@@ -70,7 +70,7 @@ class MoonApp:
         if method not in {'GET', 'HEAD'}:
             return response(405, b'Method not allowed', [('Allow', 'GET, HEAD')])
         try:
-            width, height, style = parse_options(environ.get('QUERY_STRING', ''))
+            width, height, style, background = parse_options(environ.get('QUERY_STRING', ''))
         except ValueError:
             return response(400, b'Invalid dimensions or style')
         if not self.slots.acquire(blocking=False):
@@ -94,7 +94,11 @@ class MoonApp:
                     return response(503, b'Phase unavailable', [('Retry-After', '20')])
                 self.phase_day, self.phase = day, phase
                 self.retry_phase_after = 0.0
-            data = self.renderer(width, height, style, self.phase)
+            render_started = time.monotonic()
+            data = self.renderer(width, height, style, self.phase, background)
+            logger.info('moon_render date=%s style=%s width=%d height=%d background=%s phase=%.2f duration_ms=%.1f bytes=%d',
+                        day.isoformat(), style, width, height, background or 'transparent', self.phase,
+                        (time.monotonic() - render_started) * 1000, len(data))
             finished = self.clock().astimezone(PRAGUE)
             if finished.date() != day:
                 return response(503, b'Date changed; retry', [('Retry-After', '1')])
@@ -124,7 +128,7 @@ class MoonApp:
 
 if __name__ == '__main__':
     from waitress import serve
-    logging.basicConfig(level=logging.INFO)
+    logging.basicConfig(level=logging.INFO, format='%(asctime)s %(levelname)s %(message)s')
     serve(MoonApp(), host='0.0.0.0', port=8080, threads=5,
           connection_limit=16, backlog=8, channel_timeout=20,
           cleanup_interval=5, max_request_header_size=4096,

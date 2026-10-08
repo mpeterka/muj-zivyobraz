@@ -14,23 +14,28 @@ REAL_SOURCE = 'https://commons.wikimedia.org/wiki/File:Full_Moon_Luc_Viatour.jpg
 REAL_LICENSE = 'https://creativecommons.org/licenses/by-sa/3.0/'
 
 
-def parse_options(query: str) -> tuple[int, int, str]:
+def parse_options(query: str) -> tuple[int, int, str, str | None]:
     if len(query) > 100:
         raise ValueError('Query too long')
     options = {}
     for item in query.split('&') if query else []:
         key, separator, value = item.partition('=')
-        if not separator or key not in {'width', 'height', 'style'} or key in options:
-            raise ValueError('Only unique width, height and style are allowed')
+        if not separator or key not in {'width', 'height', 'style', 'background-color'} or key in options:
+            raise ValueError('Only unique image parameters are allowed')
         if key == 'style':
             if value not in {'voyage', 'real'}:
                 raise ValueError('style must be voyage or real')
+        elif key == 'background-color':
+            if not re.fullmatch(r'%23(?:[a-fA-F0-9]{3}|[a-fA-F0-9]{6})', value):
+                raise ValueError('Background must be a URL-encoded hex color')
+            value = '#' + value[3:].lower()
         else:
             if not re.fullmatch(r'[1-9][0-9]{1,3}', value) or not 32 <= int(value) <= 1024:
                 raise ValueError('Dimensions must be integers between 32 and 1024')
             value = int(value)
         options[key] = value
-    return options.get('width', 128), options.get('height', 128), options.get('style', 'voyage')
+    return (options.get('width', 128), options.get('height', 128),
+            options.get('style', 'voyage'), options.get('background-color'))
 
 
 def phase_mask(size: int, degrees: float) -> Image.Image:
@@ -54,10 +59,12 @@ def phase_mask(size: int, degrees: float) -> Image.Image:
     return mask
 
 
-def render_moon(width: int, height: int, style: str, degrees: float) -> bytes:
+def render_moon(width: int, height: int, style: str, degrees: float, background: str | None = None) -> bytes:
     parse_options(f'width={width}&height={height}&style={style}')
     if not math.isfinite(degrees):
         raise ValueError('Phase must be finite')
+    if background is not None and not re.fullmatch(r'#(?:[a-fA-F0-9]{3}|[a-fA-F0-9]{6})', background):
+        raise ValueError('Invalid background color')
     size = max(1, int(min(width, height) * .94))
     # Keep Voyage's full silhouette, including the rocket outside the disk.
     if style == 'voyage':
@@ -94,12 +101,22 @@ def render_moon(width: int, height: int, style: str, degrees: float) -> bytes:
     canvas = Image.new('L', (width, height), 255)
     canvas.paste(lit, ((width - size) // 2, (height - size) // 2), disk)
     monochrome = canvas.convert('1', dither=Image.Dither.FLOYDSTEINBERG)
+    # E-paper backgrounds vary: only the illuminated subject is opaque.
+    alpha = Image.new('L', (width, height), 0)
+    alpha.paste(ImageChops.multiply(disk, illumination),
+                ((width - size) // 2, (height - size) // 2))
+    monochrome = monochrome.convert('RGBA')
+    monochrome.putalpha(alpha)
+    if background is not None:
+        backdrop = Image.new('RGBA', (width, height), background)
+        backdrop.alpha_composite(monochrome)
+        monochrome = backdrop
     metadata = PngInfo()
     if style == 'real':
         metadata.add_text('Author', 'Luc Viatour / https://lucnix.be')
         metadata.add_text('Source', REAL_SOURCE)
         metadata.add_text('License', REAL_LICENSE)
-        metadata.add_text('Description', 'Adapted: crop, phase mask, resize, monochrome dithering.')
+        metadata.add_text('Description', 'Adapted: crop, transparent phase mask, resize, monochrome dithering.')
     else:
         metadata.add_text('Author', 'Georges Melies, Le Voyage dans la lune (1902)')
         metadata.add_text('Source', 'https://commons.wikimedia.org/wiki/File:Le_Voyage_dans_la_lune.jpg')

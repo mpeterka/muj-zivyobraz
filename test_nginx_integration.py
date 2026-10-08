@@ -46,7 +46,9 @@ class NginxIntegrationTests(unittest.TestCase):
         for query in ['style=real&style=voyage', 'width=128&width=256',
                       'height=128&height=128', 'style=Real', 'WIDTH=128',
                       'width=1025', 'width=0128',
-                      'style=real&foo=bar', 'width=128&', 'width=31']:
+                      'style=real&foo=bar', 'width=128&', 'width=31',
+                      'background-color=%23000&background-color=%23fff',
+                      'background-color=%23xyz', 'background-color=%2523000']:
             rejected = get(query)
             self.assertEqual(rejected.status_code, 400, query)
             self.assertIn('no-store', rejected.headers['Cache-Control'])

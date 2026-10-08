@@ -36,11 +36,19 @@ class MoonServerTests(unittest.TestCase):
         expected = int(datetime(2026, 10, 9, tzinfo=PRAGUE).timestamp())
         self.assertEqual(result['headers']['X-Accel-Expires'], f'@{expected}')
         self.assertEqual(result['headers']['Expires'], 'Thu, 08 Oct 2026 22:00:00 GMT')
-        app.renderer.assert_called_once_with(256, 128, 'real', 90)
+        app.renderer.assert_called_once_with(256, 128, 'real', 90, None)
 
     def test_dst_day_is_25_hours(self):
         app = self.app(datetime(2026, 10, 25, tzinfo=PRAGUE))
         self.assertEqual(call(app)['headers']['Cache-Control'], 'public, max-age=90000')
+
+    def test_render_log_contains_cost_and_variant(self):
+        with self.assertLogs('moon_server', level='INFO') as logs:
+            call(self.app(), 'style=real&width=256')
+        message = '\n'.join(logs.output)
+        for field in ['date=2026-10-08', 'style=real', 'width=256', 'height=128',
+                      'phase=90.00', 'duration_ms=', 'bytes=3']:
+            self.assertIn(field, message)
 
     def test_errors_are_not_cached_and_do_not_render(self):
         app = self.app()

@@ -43,4 +43,5 @@ share/python-wheels/
 Thumbs.db
 
 # Docker
+/.superpowers/
 /.claude/settings.local.json

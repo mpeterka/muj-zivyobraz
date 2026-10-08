@@ -8,13 +8,17 @@ Samostatná služba poskytuje `GET /moon.png` (také `HEAD`). Příklady:
 /moon.png
 /moon.png?width=128&height=128&style=voyage
 /moon.png?width=256&height=256&style=real
+/moon.png?width=128&height=128&style=voyage&background-color=%23000
 ```
 
 Výchozí rozměry jsou 128 × 128 px a styl `voyage` (Cesta na Měsíc, obličej
 s raketou a odstraněným pozadím). Styl `real` používá fotografii Luc Viatour.
 Každý rozměr musí být celé číslo 32–1024 bez počátečních nul. Pořadí
-parametrů je libovolné; neznámé, duplicitní nebo kódované parametry jsou 400.
+parametrů je libovolné; neznámé a duplicitní parametry jsou 400.
 Výstup je černobílý PNG s Floyd–Steinberg ditheringem v konečné velikosti.
+Pozadí a zastíněná část jsou průhledné. Nepovinný `background-color`
+je vyplní barvou `#RGB` nebo `#RRGGBB`; v URL musí být `#` jako `%23`.
+Jiné kódování parametrů není povoleno. Barva pozadí je součástí cache klíče.
 Velikost URL musí odpovídat velikosti widgetu, aby portál nemusel PNG zmenšovat.
 
 Fáze odpovídá dnešnímu datu v `Europe/Prague`, s denní aktualizací z MET
@@ -58,6 +62,11 @@ PNG se v Pythonu necachují. Nginx cache má target 64 MiB, pevný tmpfs
 strop 80 MiB a keys_zone 2 MiB; po restartu nginxu se doplní znovu.
 Memory limit: moon 256 MiB, nginx 128 MiB. Hlavička `X-Moon-Cache`
 ukazuje MISS/HIT. Nginx ukládá pouze úspěšné odpovědi; chyby jsou no-store.
+
+`docker compose logs -f moon moon-nginx` ukáže skutečné rendery i přístupy.
+`moon_render` loguje datum, styl, rozměry, pozadí, fázi, dobu v ms a velikost PNG.
+Nginx loguje `cache=HIT/MISS`, status, počet bajtů a dobu požadavku/upstreamu.
+Souhrn renderů za poslední den: `docker compose logs --since 24h moon | grep -c moon_render`.
 
 Podklady a licence: [assets/moon/README.md](assets/moon/README.md).
 Fotografie `real`: **Luc Viatour / https://lucnix.be**, [zdroj](https://commons.wikimedia.org/wiki/File:Full_Moon_Luc_Viatour.jpg),

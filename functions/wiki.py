@@ -61,7 +61,7 @@ def get_wiki_dnesek_v_minulosti():
 
 
 def get_wiki_aktuality():
-    """Pět nejnovějších datovaných zpráv z Portálu:Aktuality."""
+    """Tři nejnovější datované zprávy z Portálu:Aktuality."""
     soup = _load_page(WIKI_NEWS_PAGE)
     if soup is None:
         return {}
@@ -75,7 +75,7 @@ def get_wiki_aktuality():
         text = _item_text(entry)
         if date and text:
             items.append(f'{date.group(0)} – {text}')
-        if len(items) == 5:
+        if len(items) == 3:
             break
     if not items:
         logger.warning("Aktuality Wikipedie nenalezeny; hodnota se nemění.")

@@ -56,7 +56,7 @@ class WikiTest(unittest.TestCase):
         </dl></div>''')
         self.assertEqual(wiki.get_wiki_aktuality(), {'wiki_aktuality':
             '7. října – První zpráva.\n7. října – Druhá zpráva.\n'
-            '6. října – Třetí zpráva.\n6. října – Čtvrtá zpráva.\n6. října – Pátá zpráva.'})
+            '6. října – Třetí zpráva.'})
 
     @patch.object(wiki.requests, 'get')
     def test_news_failure_does_not_overwrite_previous_value(self, get):

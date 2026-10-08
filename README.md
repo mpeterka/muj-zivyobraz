@@ -6,6 +6,17 @@ Meníčka se aktualizují každý den v 7:00–14:00 každou hodinu a v 18:00
 v časové zóně `Europe/Prague`, také při spuštění aplikace. Načítá se pouze
 nabídka pro dnešní datum; české znaky a mezery se upraví před zkrácením názvů.
 
+Původní `menicka` zachovává stejný formát i limit 25 znaků. Samostatné hodnoty
+`menicka_nase_farma`, `menicka_sedlaci`, `menicka_klika`, `menicka_krajinska_27`
+a `menicka_solnice` obsahují nejvýše pět jídel, každé na vlastním řádku;
+názvy se zkracují do 25 znaků na hranici slova a doplňují znakem `…`.
+Obrazovka 6924 používá pět dvojic `menicka_1_restaurace` / `menicka_1_jidla`
+až `menicka_5_restaurace` / `menicka_5_jidla`. Obsazené bloky obsahují pouze
+restaurace s dnešní nabídkou; neobsazené hodnoty se vyprázdní.
+`menicka_stav` rozlišuje chybějící nabídku a chybu načtení.
+`menicka_datum` označuje hledaný den nabídky a `menicka_nacteno` čas
+dokončení načtení v Praze. Všechny hodnoty se odesílají jedním požadavkem.
+
 Klementinum používá oficiální CSV z
 [otevřených dat ČHMÚ](https://opendata.chmi.cz/meteorology/climate/historical_csv/data/daily/temperature/)
 pro stanici `0-203-0-11514`. Minimum a maximum jsou historické denní extrémy

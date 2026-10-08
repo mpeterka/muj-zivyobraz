@@ -1,6 +1,7 @@
 import requests
 from bs4 import BeautifulSoup
 import re
+import unicodedata
 from datetime import datetime
 from zoneinfo import ZoneInfo
 
@@ -15,17 +16,21 @@ RESTAURANTS = {
 }
 
 
-def scrape_menicka_ceske_budejovice():
-    """
-    Stáhne web menicka.cz a extrahuje menu vybraných restaurací.
-    Vrací string ve formátu: Restaurace: jídlo | jídlo | jídlo\nRestaurace 2: ...\n
-    """
+def get_menicka_values():
+    """Jedno načtení pro původní přehled i samostatné bloky restaurací."""
     result = []
+    values = {}
+    available = []
+    unavailable = []
+    failed = []
     today = datetime.now(ZoneInfo('Europe/Prague')).date()
 
     for rest_name, rest_url_part in RESTAURANTS.items():
         url = f"https://www.menicka.cz/{rest_url_part}.html"
         dishes = []
+        key = 'menicka_' + re.sub(r'\W+', '_', unicodedata.normalize(
+            'NFKD', rest_name).encode('ascii', 'ignore').decode().lower()).strip('_')
+        values[key] = ''
 
         try:
             response = requests.get(url, timeout=10)
@@ -61,23 +66,51 @@ def scrape_menicka_ceske_budejovice():
 
                     # Vynechat oddělovače
                     if text and not text.startswith('---'):
-                        # Omezit na 25 znaků, přidat "..." pokud je delší
-                        if len(text) > 25:
-                            text = text[:25] + "..."
                         dishes.append(text)
 
             if dishes:
                 # Vzít jen prvních 5 jídel
                 top_dishes = dishes[:5]
-                dishes_str = " | ".join(top_dishes)
+                dishes_str = " | ".join(text[:25] + '...' if len(text) > 25 else text
+                                        for text in top_dishes)
                 result.append(f"{rest_name}: {dishes_str}")
+                lines = []
+                for text in top_dishes:
+                    if len(text) > 25:
+                        shortened = text[:25]
+                        if text[25] != ' ' and ' ' in shortened:
+                            shortened = shortened.rsplit(' ', 1)[0]
+                        text = shortened.rstrip() + '…'
+                    lines.append(text)
+                values[key] = '\n'.join(lines)
+                available.append((rest_name, values[key]))
             else:
                 result.append(f"{rest_name}: menu není dostupné")
+                unavailable.append(rest_name)
 
         except Exception as e:
             result.append(f"{rest_name}: Chyba - {str(e)}")
+            failed.append(rest_name)
 
-    return "\n".join(result)
+    values['menicka'] = '\n'.join(result)
+    values['menicka_datum'] = f'{today.day}. {today.month}. {today.year}'
+    values['menicka_nacteno'] = datetime.now(ZoneInfo('Europe/Prague')).strftime('%H:%M')
+    status = []
+    if unavailable:
+        status.append('Bez nabídky: ' + ', '.join(unavailable))
+    if failed:
+        status.append('Nelze načíst: ' + ', '.join(failed))
+    values['menicka_stav'] = ' · '.join(status)
+    for index in range(1, 6):
+        name, menu = available[index - 1] if index <= len(available) else ('', '')
+        values[f'menicka_{index}_restaurace'] = name
+        values[f'menicka_{index}_jidla'] = menu
+    return values
+
+
+def scrape_menicka_ceske_budejovice():
+    """Původní formát pro stávající obrazovky."""
+    return get_menicka_values()['menicka']
 
 
 if __name__ == "__main__":

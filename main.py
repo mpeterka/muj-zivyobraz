@@ -6,7 +6,7 @@ import logging
 from apscheduler.schedulers.background import BackgroundScheduler
 from functions.popelnice import get_popelnice_value
 from functions.klementinum import get_klementinum_values
-from functions.menicka import scrape_menicka_ceske_budejovice
+from functions.menicka import get_menicka_values
 from functions.zemeplocha import zemeplocha_cs
 from functions.faze_mesice import faze_mesice
 from functions.fortunes import pratchet, plihal, cimrman, klsk_cz, vodnsnky, zemplcha
@@ -76,8 +76,7 @@ def job_klementinum():
 
 def job_menicka():
     """Job for menicka function"""
-    value = scrape_menicka_ceske_budejovice()
-    call_function("menicka", value)
+    call_function_multiple(get_menicka_values())
 
 
 def job_zemeplocha_cs():

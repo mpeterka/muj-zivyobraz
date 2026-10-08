@@ -16,8 +16,10 @@ s raketou a odstraněným pozadím). Styl `real` používá fotografii Luc Viato
 Každý rozměr musí být celé číslo 32–1024 bez počátečních nul. Pořadí
 parametrů je libovolné; neznámé a duplicitní parametry jsou 400.
 Výstup je černobílý PNG s Floyd–Steinberg ditheringem v konečné velikosti.
-Pozadí a zastíněná část jsou průhledné. Nepovinný `background-color`
-je vyplní barvou `#RGB` nebo `#RRGGBB`; v URL musí být `#` jako `%23`.
+Pozadí je průhledné. Zastíněná část má zvolenou intenzitu kresby 15 %
+(85 % průhlednost v porovnávacích náhledech), aplikovanou před ditheringem.
+Nepovinný `background-color` vyplní pozadí barvou `#RGB` nebo `#RRGGBB`;
+v URL musí být `#` jako `%23`.
 Jiné kódování parametrů není povoleno. Barva pozadí je součástí cache klíče.
 Velikost URL musí odpovídat velikosti widgetu, aby portál nemusel PNG zmenšovat.
 

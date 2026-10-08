@@ -17,7 +17,7 @@ class MoonImageTests(unittest.TestCase):
         transparent = Image.open(io.BytesIO(render_moon(128, 128, 'real', 90)))
         colored = Image.open(io.BytesIO(render_moon(128, 128, 'real', 90, '#123abc')))
         self.assertEqual(colored.getpixel((0, 0)), (18, 58, 188, 255))
-        self.assertEqual(colored.getpixel((32, 64)), (18, 58, 188, 255))
+        self.assertEqual(colored.getpixel((32, 64)), transparent.getpixel((32, 64)))
         self.assertEqual(colored.getpixel((96, 64)), transparent.getpixel((96, 64)))
         for query in ['background-color=#000', 'background-color=%2300',
                       'background-color=%230000000', 'background-color=%23xyz',
@@ -59,7 +59,7 @@ class MoonImageTests(unittest.TestCase):
                     self.assertEqual(image.mode, 'RGBA')
                     self.assertEqual(image.getpixel((0, 0))[3], 0)
                     self.assertTrue(set(image.getchannel('R').get_flattened_data()) <= {0, 255})
-                    self.assertEqual(image.getpixel((size[0] // 3, size[1] // 2))[3], 0)
+                    self.assertEqual(image.getpixel((size[0] // 3, size[1] // 2))[3], 255)
                     self.assertGreater(image.getpixel((size[0] * 2 // 3, size[1] // 2))[3], 0)
                     if style == 'real':
                         self.assertIn('Luc Viatour', image.info['Author'])
@@ -69,7 +69,9 @@ class MoonImageTests(unittest.TestCase):
         for style in ['voyage', 'real']:
             image = Image.open(io.BytesIO(render_moon(128, 128, style, 0)))
             full = Image.open(io.BytesIO(render_moon(128, 128, style, 180)))
-            self.assertEqual(image.getchannel('A').getbbox(), None)
+            self.assertGreater(sum(image.getchannel('R').get_flattened_data()), 0)
+            self.assertLess(sum(image.getchannel('R').get_flattened_data()),
+                            sum(full.getchannel('R').get_flattened_data()))
             self.assertIsNotNone(full.getchannel('A').getbbox())
 
     def test_renderer_rejects_untrusted_arguments(self):

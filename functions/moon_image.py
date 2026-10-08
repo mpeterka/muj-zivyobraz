@@ -97,13 +97,15 @@ def render_moon(width: int, height: int, style: str, degrees: float, background:
     # Moderate tones keep the face/craters readable after dithering at 128 px.
     gray = ImageEnhance.Contrast(gray).enhance(.85)
     gray = ImageEnhance.Brightness(gray).enhance(1.18 if style == 'real' else 1.05)
+    # Selected shadow opacity: retain 15% texture before final-size dithering.
+    illumination = illumination.point(lambda value: value if value else 38)
     lit = ImageChops.multiply(gray, illumination)
     canvas = Image.new('L', (width, height), 255)
     canvas.paste(lit, ((width - size) // 2, (height - size) // 2), disk)
     monochrome = canvas.convert('1', dither=Image.Dither.FLOYDSTEINBERG)
-    # E-paper backgrounds vary: only the illuminated subject is opaque.
+    # Keep the subject opaque; its dim shadow has already been dithered.
     alpha = Image.new('L', (width, height), 0)
-    alpha.paste(ImageChops.multiply(disk, illumination),
+    alpha.paste(disk,
                 ((width - size) // 2, (height - size) // 2))
     monochrome = monochrome.convert('RGBA')
     monochrome.putalpha(alpha)

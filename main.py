@@ -13,6 +13,7 @@ from functions.fortunes import pratchet, plihal, cimrman, klsk_cz, vodnsnky, zem
 from functions.wiki import get_wiki_dnesek_v_minulosti, get_wiki_aktuality
 from functions.vtipy import get_vtipy_values
 from functions.detske_prace import get_detske_prace_values
+from functions.slunce import get_slunce_zitra_values
 
 # Logging setup
 logging.basicConfig(
@@ -82,6 +83,12 @@ def job_menicka():
 
 def job_detske_prace():
     call_function_multiple(get_detske_prace_values())
+
+
+def job_slunce_zitra():
+    values = get_slunce_zitra_values()
+    if values:
+        call_function_multiple(values)
 
 
 def job_zemeplocha_cs():
@@ -166,6 +173,7 @@ def signal_handler_run_all(signum, frame):
     job_klementinum()
     job_menicka()
     job_detske_prace()
+    job_slunce_zitra()
     job_zemeplocha_cs()
     job_pratchet()
     job_plihal()
@@ -245,6 +253,12 @@ def main():
         timezone='Europe/Prague',
         id='detske_prace',
         name='Detske prace function',
+        misfire_grace_time=300
+    )
+
+    scheduler.add_job(
+        job_slunce_zitra, 'cron', hour='0,6,12,18', minute=0,
+        timezone='Europe/Prague', id='slunce_zitra',
         misfire_grace_time=300
     )
 
@@ -366,6 +380,7 @@ def main():
     job_klementinum()
     job_menicka()
     job_detske_prace()
+    job_slunce_zitra()
     job_zemeplocha_cs()
     job_pratchet()
     job_plihal()

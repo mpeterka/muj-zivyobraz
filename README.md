@@ -170,3 +170,8 @@ Při spuštění zobrazí své PID:
 2026-03-16 10:15:30 - INFO - Signal handlers registered:
 2026-03-16 10:15:30 - INFO -   SIGUSR1 - Run all jobs
 ```
+
+### Slunce zitra
+
+Hodnoty slunce_zitra_vychod, slunce_zitra_zapad a slunce_zitra_datum pro Ceske Budejovice. Zdroj: MET Norway Sunrise 3.0 (https://api.met.no/weatherapi/sunrise/3.0/documentation), licence https://api.met.no/license_data.html. Aktualizace pri startu a v 00:00, 06:00, 12:00 a 18:00 v Europe/Prague.
+

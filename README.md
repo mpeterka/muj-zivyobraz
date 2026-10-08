@@ -1,5 +1,76 @@
 # zivyobraz.eu udělátka
 
+## Obrázek fáze Měsíce
+
+Samostatná služba poskytuje `GET /moon.png` (také `HEAD`). Příklady:
+
+```text
+/moon.png
+/moon.png?width=128&height=128&style=voyage
+/moon.png?width=256&height=256&style=real
+```
+
+Výchozí rozměry jsou 128 × 128 px a styl `voyage` (Cesta na Měsíc, obličej
+s raketou a odstraněným pozadím). Styl `real` používá fotografii Luc Viatour.
+Každý rozměr musí být celé číslo 32–1024 bez počátečních nul. Pořadí
+parametrů je libovolné; neznámé, duplicitní nebo kódované parametry jsou 400.
+Výstup je černobílý PNG s Floyd–Steinberg ditheringem v konečné velikosti.
+Velikost URL musí odpovídat velikosti widgetu, aby portál nemusel PNG zmenšovat.
+
+Fáze odpovídá dnešnímu datu v `Europe/Prague`, s denní aktualizací z MET
+Norway. Nginx cache expiruje nejpozději o následující pražské půlnoci.
+Při výpadku dnešního zdroje je odpověď 503; včerejší obrázek se nenabízí.
+
+Spuštění pouze obrázkové služby (bez `IMPORT_KEY`):
+
+```shell
+docker compose up -d --build moon moon-nginx
+curl -I 'http://127.0.0.1:8088/moon.png?style=voyage'
+```
+
+Nginx je dostupný pouze na `127.0.0.1:8088` (port lze změnit přes `MOON_PORT`).
+Moon nemá publikovaný port. Pokud HTTPS nginx běží na stejném hostiteli,
+do existujícího TLS serveru přidej následující location; původní query
+zůstane zachována. Tato vnější proxy sama obrázky necachuje:
+
+```nginx
+location = /moon.png {
+    proxy_pass http://127.0.0.1:8088;
+    proxy_set_header Host moon;
+    proxy_pass_header Date;
+    proxy_read_timeout 40s;
+}
+```
+
+Pokud je vnější proxy v Dockeru, připoj ji do stejné sítě a použij interní
+adresu `moon-nginx:8080`; localhost uvnitř kontejneru znamená tento kontejner.
+Bez konkrétní domény a TLS konfigurace není služba dostupná z internetu.
+
+Výchozí IP limit je 30 požadavků/min s burst 10, nejvýše 8 spojení/IP.
+Za vnější proxy všechny požadavky sdílejí její IP, pokud nezapneš real_ip
+**pouze pro přesně určený důvěryhodný proxy rozsah**. Klientské
+`X-Forwarded-For` není standardně důvěryhodné. Živý obraz také může mít
+sdílené IP; limit lze upravit v `nginx/moon.conf`.
+
+Globální limit je 6 renderů/min, burst 2. Renderuje se sériově, nejvýše
+4 požadavky čekají; přebytek je 503, vyčerpaný limit 429 s Retry-After.
+PNG se v Pythonu necachují. Nginx cache má target 64 MiB, pevný tmpfs
+strop 80 MiB a keys_zone 2 MiB; po restartu nginxu se doplní znovu.
+Memory limit: moon 256 MiB, nginx 128 MiB. Hlavička `X-Moon-Cache`
+ukazuje MISS/HIT. Nginx ukládá pouze úspěšné odpovědi; chyby jsou no-store.
+
+Podklady a licence: [assets/moon/README.md](assets/moon/README.md).
+Fotografie `real`: **Luc Viatour / https://lucnix.be**, [zdroj](https://commons.wikimedia.org/wiki/File:Full_Moon_Luc_Viatour.jpg),
+**CC BY-SA 3.0**. Odvozená PNG jsou také CC BY-SA 3.0; autor, zdroj,
+licence a popis úprav jsou v metadatech PNG, HTTP credit/Link hlavičkách.
+Při dalším zveřejnění fotografie uváděj příslušný kredit a licenci.
+
+Integrační test vyžaduje čerstvou cache a plný render budget. Použij
+oddělený Compose project a volný `MOON_PORT`, spusť pouze `moon` a
+`moon-nginx`; poté nastav `MOON_TEST_URL=http://127.0.0.1:<port>` a spusť
+`python -m unittest test_nginx_integration -v`. Test používá skutečný
+nginx i MET, ověřuje cache, style, validaci, HEAD/ETag a oba rate limity.
+
 Aplikace běží v cyklu a jednou za hodinu odesílá data do `zivyobraz.eu` API.
 
 Meníčka se aktualizují každý den v 7:00–14:00 každou hodinu a v 18:00

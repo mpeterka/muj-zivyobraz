@@ -1,7 +1,9 @@
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import date, datetime, time
 import logging
+import math
+from zoneinfo import ZoneInfo
 
 import requests
 
@@ -11,6 +13,7 @@ API_URL = "https://api.met.no/weatherapi/sunrise/3.0/moon"
 LATITUDE = 50.0755
 LONGITUDE = 14.4378
 USER_AGENT = "muj-zivyobraz/1.0"
+PRAGUE = ZoneInfo('Europe/Prague')
 
 PHASE_SYMBOLS = {
     "New Moon": "🌑",
@@ -24,8 +27,8 @@ PHASE_SYMBOLS = {
 }
 
 
-def _timezone_offset() -> str:
-    offset = datetime.now().astimezone().utcoffset()
+def _timezone_offset(day: date) -> str:
+    offset = datetime.combine(day, time(12), PRAGUE).utcoffset()
     if offset is None:
         return "+00:00"
 
@@ -66,19 +69,21 @@ def _extract_degrees(payload: dict) -> float | None:
         return None
 
     try:
-        return float(raw_degree)
+        degrees = float(raw_degree)
+        return degrees % 360 if math.isfinite(degrees) else None
     except (TypeError, ValueError):
         return None
 
 
-def faze_mesice() -> dict | None:
+def faze_mesice(day: date | None = None) -> dict | None:
     """Fetch the current lunar degree and return the phase symbol + metadata."""
 
+    day = day or datetime.now(PRAGUE).date()
     params = {
         "lat": LATITUDE,
         "lon": LONGITUDE,
-        "date": datetime.now(timezone.utc).date().isoformat(),
-        "offset": _timezone_offset(),
+        "date": day.isoformat(),
+        "offset": _timezone_offset(day),
     }
     headers = {"User-Agent": USER_AGENT}
 
@@ -97,6 +102,6 @@ def faze_mesice() -> dict | None:
             "name": phase_name,
             "degrees": phase_degrees,
         }
-    except requests.exceptions.RequestException as exc:
+    except (requests.exceptions.RequestException, ValueError, TypeError) as exc:
         logger.error("faze_mesice: %s", exc)
         return None

@@ -15,6 +15,7 @@ class MenuScheduleTest(unittest.TestCase):
             stack.enter_context(patch.object(main.signal, 'signal'))
             stack.enter_context(patch.object(main.signal, 'pause', create=True))
             stack.enter_context(patch.object(main.BackgroundScheduler, 'start'))
+            stack.enter_context(patch.object(main, 'start_http_server', return_value=(None, None)))
             for name in vars(main):
                 if name.startswith('job_'):
                     stack.enter_context(patch.object(main, name))

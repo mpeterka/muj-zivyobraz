@@ -34,6 +34,15 @@ Vybírají se celé vtipy do 300 znaků, bez doplněného dovětku se zdrojem.
 Pokud zdroj neodpovídá nebo nenabídne dostatečně krátký vtip, předchozí
 hodnota na Živém obrazu zůstane zachována.
 
+## Monitoring
+
+Prometheus metriky jsou na `http://muj-zivyobraz:8000/metrics` v Docker síti.
+Port se nepublikuje na hostitele. Endpoint neobsahuje importní klíč ani hodnoty
+odesílaného obsahu. Obsahuje procesní metriky, počty úspěšných/chybných uploadů,
+čas posledního úspěšného uploadu, počty dokončení/výjimek úloh, jejich dobu běhu
+a poslední dokončení. Dokončení úlohy samo o sobě nezaručuje nová data: zdrojové
+funkce mohou při nedostupnosti dat vrátit prázdný výsledek.
+
 ## Testy
 
 Wikipedie se načítá při startu a v 5:00, 12:00 a 18:00 (`Europe/Prague`).
@@ -182,3 +191,16 @@ Hodnoty slunce_zitra_vychod, slunce_zitra_zapad a slunce_zitra_datum pro Ceske B
 
 Hodnota pranostika vybira kratkou pranostiku pro aktualni den z ceskych Wikicitatu. Pokud pro den chybi, pouzije pranostiku pro aktualni mesic. Zdroj: https://cs.wikiquote.org/wiki/Pranostiky (CC BY-SA), odkaz na konkretni mesic v pranostika_zdroj. Aktualizace pri startu a v 00:00, 06:00, 12:00, 18:00 Europe/Prague.
 
+
+## Tracing
+
+Nastavení OTEL_EXPORTER_OTLP_ENDPOINT zapne vlastní spany plánovaných úloh a requests instrumentaci. Cloud token aplikace nepotřebuje; odesílá do interního Alloy. URL atributy redigované, nevytváří další OTel metrics/log exportery. Nasazení, firewall a rollback jsou zdokumentovány v projektu Karotka, monitoring/tracing-deployment.md.
+
+## Verze a nasazení
+
+`APP_DEPLOYMENT_VERSION` určuje bezpečný label metriky `zivyobraz_build_info`;
+chybějící/neplatná hodnota se označí unknown. Metrika
+`zivyobraz_application_start_timestamp_seconds` ukazuje start procesu.
+Dashboard Živý obraz propojuje fialovou značku nasazení s dobou běhu úloh,
+chybami uploadů a RAM. Značku zapíše skript `monitoring/record-deployment.ps1`
+z projektu Karotka; postup je v `monitoring/deployment-markers.md`.

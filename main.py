@@ -3,6 +3,12 @@ import signal
 import sys
 import requests
 import logging
+import time
+from functools import wraps
+from opentelemetry import trace
+from opentelemetry.trace import StatusCode
+from tracing import configure as configure_tracing
+from prometheus_client import Counter, Gauge, Histogram, Info, start_http_server
 from apscheduler.schedulers.background import BackgroundScheduler
 from functions.popelnice import get_popelnice_value
 from functions.klementinum import get_klementinum_values
@@ -32,6 +38,46 @@ if not IMPORT_KEY:
 
 # Global scheduler reference for signal handlers
 scheduler = None
+metrics_server = None
+tracing_provider = None
+tracer = trace.get_tracer('muj-zivyobraz.jobs')
+deployment_version = os.getenv('APP_DEPLOYMENT_VERSION', 'unknown')
+if len(deployment_version) > 80 or not all(char.isalnum() or char in '._-' for char in deployment_version):
+    deployment_version = 'unknown'
+Info('zivyobraz_build', 'Deployed application version').info({'version': deployment_version})
+Gauge('zivyobraz_application_start_timestamp_seconds', 'Application startup timestamp').set(time.time())
+
+UPLOADS = Counter('zivyobraz_uploads_total', 'API uploads by result', ['result'])
+LAST_UPLOAD_SUCCESS = Gauge('zivyobraz_last_upload_success_timestamp_seconds', 'Last successful API upload')
+JOB_RUNS = Counter('zivyobraz_job_runs_total', 'Job completions; completed does not imply data was available', ['task', 'result'])
+JOB_DURATION = Histogram('zivyobraz_job_duration_seconds', 'Job execution duration', ['task'], buckets=(1, 5, 15, 60, 300, 900))
+JOB_LAST_RUN = Gauge('zivyobraz_job_last_run_timestamp_seconds', 'Last finished job execution', ['task'])
+for result in ('success', 'error'):
+    UPLOADS.labels(result=result)
+
+
+def track_job(function):
+    job = function.__name__.removeprefix('job_')
+    for result in ('completed', 'error'):
+        JOB_RUNS.labels(task=job, result=result)
+    JOB_LAST_RUN.labels(task=job)
+
+    @wraps(function)
+    def measured(*args, **kwargs):
+        started = time.monotonic()
+        result = 'completed'
+        with tracer.start_as_current_span('scheduled job', attributes={'job.name': job}, record_exception=False, set_status_on_exception=False) as span:
+            try:
+                return function(*args, **kwargs)
+            except Exception:
+                result = 'error'
+                span.set_status(StatusCode.ERROR)
+                raise
+            finally:
+                JOB_RUNS.labels(task=job, result=result).inc()
+                JOB_DURATION.labels(task=job).observe(time.monotonic() - started)
+                JOB_LAST_RUN.labels(task=job).set_to_current_time()
+    return measured
 
 
 def call_function(function_name, value):
@@ -43,9 +89,13 @@ def call_function(function_name, value):
         }
         response = requests.get(BASE_URL, params=params, timeout=10)
         response.raise_for_status()
+        UPLOADS.labels(result='success').inc()
+        LAST_UPLOAD_SUCCESS.set_to_current_time()
         logger.info(f"✓ {function_name}={value} | Status: {response.status_code}")
         return True
     except requests.exceptions.RequestException as e:
+        trace.get_current_span().set_status(StatusCode.ERROR)
+        UPLOADS.labels(result='error').inc()
         logger.error(f"✗ {function_name} failed: {e}")
         return False
 
@@ -57,19 +107,25 @@ def call_function_multiple(values_dict):
         params.update(values_dict)
         response = requests.get(BASE_URL, params=params, timeout=10)
         response.raise_for_status()
+        UPLOADS.labels(result='success').inc()
+        LAST_UPLOAD_SUCCESS.set_to_current_time()
         logger.info(f"✓ Multiple values sent | Status: {response.status_code}")
         return True
     except requests.exceptions.RequestException as e:
+        trace.get_current_span().set_status(StatusCode.ERROR)
+        UPLOADS.labels(result='error').inc()
         logger.error(f"✗ Multiple values failed: {e}")
         return False
 
 
+@track_job
 def job_popelnice():
     """Job for popelnice function"""
     value = get_popelnice_value()
     call_function("popelnice", value)
 
 
+@track_job
 def job_klementinum():
     """Job for klementinum function"""
     values = get_klementinum_values()
@@ -77,27 +133,32 @@ def job_klementinum():
         call_function_multiple(values)
 
 
+@track_job
 def job_menicka():
     """Job for menicka function"""
     call_function_multiple(get_menicka_values())
 
 
+@track_job
 def job_detske_prace():
     call_function_multiple(get_detske_prace_values())
 
 
+@track_job
 def job_slunce_zitra():
     values = get_slunce_zitra_values()
     if values:
         call_function_multiple(values)
 
 
+@track_job
 def job_pranostika():
     values = get_pranostika_values()
     if values:
         call_function_multiple(values)
 
 
+@track_job
 def job_zemeplocha_cs():
     """Job for zemeplocha_cs function"""
     values = zemeplocha_cs()
@@ -105,6 +166,7 @@ def job_zemeplocha_cs():
         call_function_multiple(values)
 
 
+@track_job
 def job_pratchet():
     """Job for pratchet function"""
     values = pratchet()
@@ -112,6 +174,7 @@ def job_pratchet():
         call_function_multiple(values)
 
 
+@track_job
 def job_plihal():
     """Job for plihal function"""
     values = plihal()
@@ -119,6 +182,7 @@ def job_plihal():
         call_function_multiple(values)
 
 
+@track_job
 def job_cimrman():
     """Job for cimrman function"""
     values = cimrman()
@@ -126,6 +190,7 @@ def job_cimrman():
         call_function_multiple(values)
 
 
+@track_job
 def job_klsk_cz():
     """Job for klsk_cz function"""
     values = klsk_cz()
@@ -133,6 +198,7 @@ def job_klsk_cz():
         call_function_multiple(values)
 
 
+@track_job
 def job_vodnsnky():
     """Job for vodnsnky function"""
     values = vodnsnky()
@@ -140,6 +206,7 @@ def job_vodnsnky():
         call_function_multiple(values)
 
 
+@track_job
 def job_zemplcha():
     """Job for zemplcha function"""
     values = zemplcha()
@@ -147,6 +214,7 @@ def job_zemplcha():
         call_function_multiple(values)
 
 
+@track_job
 def job_faze_mesice():
     """Job for faze_mesice function"""
     payload = faze_mesice()
@@ -154,6 +222,7 @@ def job_faze_mesice():
         call_function("faze_mesice", payload["symbol"])
 
 
+@track_job
 def job_wiki_dnesek_v_minulosti():
     """Job for wiki_dnesek_v_minulosti function"""
     values = get_wiki_dnesek_v_minulosti()
@@ -161,12 +230,14 @@ def job_wiki_dnesek_v_minulosti():
         call_function_multiple(values)
 
 
+@track_job
 def job_wiki_aktuality():
     values = get_wiki_aktuality()
     if values:
         call_function_multiple(values)
 
 
+@track_job
 def job_vtipy():
     values = get_vtipy_values()
     if values:
@@ -200,15 +271,22 @@ def signal_handler_shutdown(signum, frame):
     logger.info("🛑 Shutdown signal received...")
     if scheduler:
         scheduler.shutdown()
+    if metrics_server:
+        metrics_server.shutdown()
+        metrics_server.server_close()
+    if tracing_provider:
+        tracing_provider.shutdown()
     sys.exit(0)
 
 
 def main():
-    global scheduler
+    global scheduler, metrics_server, tracing_provider
+    tracing_provider = configure_tracing()
 
     logger.info("Starting application...")
     logger.info(f"Base URL: {BASE_URL}")
     logger.info(f"PID: {os.getpid()}")
+    metrics_server, _ = start_http_server(8000, addr='0.0.0.0')
 
     # Setup signal handlers
     signal.signal(signal.SIGUSR1, signal_handler_run_all)

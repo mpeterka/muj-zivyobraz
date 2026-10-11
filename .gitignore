@@ -10,6 +10,7 @@ __pycache__/
 *.so
 .Python
 env/
+.venv/
 venv/
 ENV/
 build/
@@ -42,5 +43,5 @@ share/python-wheels/
 Thumbs.db
 
 # Docker
-.dockerignore
+/.superpowers/
 /.claude/settings.local.json

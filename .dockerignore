@@ -1,0 +1,13 @@
+.git
+.venv
+venv
+__pycache__
+**/__pycache__
+.env
+.env.*
+!.env.example
+.claude
+.idea
+.superpowers
+docs
+*.log

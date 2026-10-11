@@ -27,8 +27,9 @@ GET /moon.png?width=128&height=128 vrací image/png.
 GET /moon.png vrací 128 × 128 px. Chybějící rozměr má hodnotu 128.
 HEAD má stejné hlavičky jako GET a žádné tělo.
 
-Povolena jsou pouze width a height, každé nejvýše jednou, v libovolném
-pořadí. Hodnoty jsou desetinné ASCII číslice v kanonickém zápisu bez
+Povolena jsou pouze width, height a style, každé nejvýše jednou, v libovolném
+pořadí. Style má hodnotu voyage (výchozí) nebo real. Rozměry jsou
+desetinné ASCII číslice v kanonickém zápisu bez
 počátečních nul, v rozsahu 32–1024. Prázdné hodnoty, další parametry,
 duplicitní klíče, procentové kódování, znaménka a jiné oddělovače jsou 400.
 Nginx i aplikace ověřují stejný kontrakt. Nginx ověřuje celý řetězec query,
@@ -71,7 +72,7 @@ Výstup PNG obsahuje pouze černou a bílou, má přesně požadované rozměry.
 ## Cache a ochrana proti poisoning
 
 Hotová PNG cachuje pouze nginx. Klíč je pevný prefix/verze rendereru
-a normalizovaná dvojice rozměrů. Ekvivalentní pořadí parametrů a výchozí
+a normalizované rozměry a styl. Ekvivalentní pořadí parametrů a výchozí
 hodnoty mají stejný klíč. Host, X-Forwarded-Host, raw query a klientská
 cache hlavička se do klíče nepoužijí. Proxy nastaví pevný upstream Host,
 nepředá cookies/Authorization ani klientské proxy hlavičky.
@@ -153,4 +154,12 @@ endpoint nesplňuje požadavek funkčního widgetu.
 - MET Norway: https://api.met.no/weatherapi/sunrise/3.0/documentation
 - Živý obraz URL: https://zivyobraz.eu/docs/cs/webovy-portal/zdroj-obsahu/url/
 
-Stav: návrh pro uživatelskou kontrolu před implementací HTTP služby.
+## Doplnění stylu real
+
+Style real používá vybranou fotografii Full Moon Luc Viatour. Originál se
+ukládá lokálně bez AI úprav. Vykreslení provádí výřez a kruhovou masku;
+vnější černé pozadí se do PNG nedostane. Autor, původ, popis úprav
+a licence CC BY-SA 3.0 jsou v dokumentaci, PNG metadatech a HTTP hlavičkách.
+Odvozená PNG stylu real jsou distribuována pod CC BY-SA 3.0.
+
+Stav: uživatel schválil pokračování 8. 10. 2026 a doplnil styl real.

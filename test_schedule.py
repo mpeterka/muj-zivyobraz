@@ -27,7 +27,7 @@ class MenuScheduleTest(unittest.TestCase):
             next_time = trigger.get_next_fire_time(None, now)
             self.assertEqual(next_time.hour, 9)
             self.assertEqual(next_time.minute, 0)
-            self.assertEqual(next_time.tzinfo.zone, 'Europe/Prague')
+            self.assertEqual(str(next_time.tzinfo), 'Europe/Prague')
         now = datetime(2026, 7, 6, 12, 1, tzinfo=timezone.utc)
         self.assertEqual(trigger.get_next_fire_time(None, now).hour, 18)
         jokes = main.scheduler.get_job('vtipy')

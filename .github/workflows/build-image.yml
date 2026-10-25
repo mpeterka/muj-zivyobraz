@@ -5,6 +5,9 @@ on:
     branches: [ main, master ]
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
   docker-build:
     runs-on: ubuntu-latest
@@ -24,6 +27,7 @@ jobs:
       - name: Set up Buildx
         uses: docker/setup-buildx-action@v3
       - name: Log in to container registry
+        if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v'))
         uses: docker/login-action@v3
         with:
           registry: ${{ env.REGISTRY_URL }}
@@ -33,5 +37,34 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: .
-          push: true
-          tags: ${{ env.REGISTRY_URL }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
+          push: false
+          load: true
+          tags: local/security-scan:${{ github.sha }}
+
+      - name: Report image vulnerabilities
+        id: vulnerability-report
+        uses: aquasecurity/trivy-action@a9c7b0f06e461e9d4b4d1711f154ee024b8d7ab8 # v0.36.0
+        with:
+          version: v0.76.1
+          image-ref: local/security-scan:${{ github.sha }}
+          scanners: vuln
+          format: json
+          output: trivy-results.json
+          exit-code: '0'
+          ignore-unfixed: false
+          severity: UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL
+      - name: Block fixable high and critical vulnerabilities
+        uses: aquasecurity/trivy-action@a9c7b0f06e461e9d4b4d1711f154ee024b8d7ab8 # v0.36.0
+        with:
+          version: v0.76.1
+          image-ref: local/security-scan:${{ github.sha }}
+          scanners: vuln
+          format: table
+          exit-code: '1'
+          ignore-unfixed: true
+          severity: HIGH,CRITICAL
+      - name: Publish scanned image
+        if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v'))
+        run: |
+          docker tag local/security-scan:${{ github.sha }} "${{ env.REGISTRY_URL }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}"
+          docker push "${{ env.REGISTRY_URL }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}"

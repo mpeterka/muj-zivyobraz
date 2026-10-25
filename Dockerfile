@@ -1,4 +1,6 @@
-FROM python:3.11-slim
+FROM python:3.11-alpine@sha256:5fb4bc53dd0180955e31e5245b648bbb24a4ac4ab03a1de81513642325220bcd
+
+RUN apk upgrade --no-cache
 
 WORKDIR /app
 
@@ -11,8 +13,10 @@ RUN pip install --no-cache-dir -r requirements.txt \
 COPY . .
 
 # Environment variables
-ENV PYTHONUNBUFFERED=1
+ENV PYTHONUNBUFFERED=1 PYTHONDONTWRITEBYTECODE=1 TZ=Etc/UTC
 EXPOSE 8000
+
+USER 65534:65534
 
 # Run the application
 CMD ["python", "main.py"]

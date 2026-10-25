@@ -1,4 +1,4 @@
-requests==2.31.0
+requests==2.33.0
 APScheduler==3.11.3
 beautifulsoup4==4.12.2
 prometheus-client==0.26.0

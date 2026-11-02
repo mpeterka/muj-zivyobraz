@@ -74,3 +74,16 @@ jobs:
         run: |
           docker tag local/security-scan:${{ github.sha }} "${{ env.REGISTRY_URL }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}"
           docker push "${{ env.REGISTRY_URL }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}"
+      # Spustí v karotce workflow restart-services.yml (pull + recreate služby).
+      # Token: fine-grained PAT na mpeterka/karotka s právem Actions: Read and write.
+      - name: Restart kontejneru na karotce
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        env:
+          GH_TOKEN: ${{ secrets.KAROTKA_ACTIONS_TOKEN }}
+        run: |
+          if [ -z "$GH_TOKEN" ]; then
+            echo "::warning::Chybí secret KAROTKA_ACTIONS_TOKEN – kontejner se nerestartuje."
+            exit 0
+          fi
+          gh workflow run restart-services.yml -R mpeterka/karotka -f target=muj-zivyobraz
+          gh workflow run restart-services.yml -R mpeterka/karotka -f target=moon

@@ -85,5 +85,5 @@ jobs:
             echo "::warning::Chybí secret KAROTKA_ACTIONS_TOKEN – kontejner se nerestartuje."
             exit 0
           fi
-          gh workflow run restart-services.yml -R mpeterka/karotka -f target=muj-zivyobraz
-          gh workflow run restart-services.yml -R mpeterka/karotka -f target=moon
+          gh workflow run restart-services.yml -R mpeterka/karotka --ref master -f target=muj-zivyobraz
+          gh workflow run restart-services.yml -R mpeterka/karotka --ref master -f target=moon

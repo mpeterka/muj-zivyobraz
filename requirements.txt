@@ -1,6 +1,7 @@
 requests==2.33.0
 APScheduler==3.11.3
 beautifulsoup4==4.12.2
+soupsieve==4.0.0
 prometheus-client==0.26.0
 opentelemetry-sdk==1.45.1
 opentelemetry-exporter-otlp-proto-http==1.45.1
